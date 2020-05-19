@@ -279,7 +279,7 @@ public class AbilityScoresTest {
 	public static EnumMap<AbilityName, Integer> basicAbilityScores() {
 		EnumMap<AbilityName, Integer> abilities = 
 				new EnumMap<AbilityName, Integer>(AbilityName.class);
-		int i = 0;
+		int i = - AbilityName.values().length / 2;
 		for(AbilityName ability : AbilityName.values()) {
 			abilities.put(ability, 10+i);
 			i++;

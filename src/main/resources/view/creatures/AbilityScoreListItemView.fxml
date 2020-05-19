@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+
+<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="27.0" prefWidth="407.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.creatures.AbilityScoreListItemView">
+   <children>
+      <Label fx:id="abilityLabel" prefHeight="52.0" prefWidth="110.0" text="AbilityName" />
+      <TextField fx:id="abilityScoreField" editable="false" />
+      <TextField fx:id="abilityModifierField" editable="false" />
+   </children>
+</HBox>
