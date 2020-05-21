@@ -36,7 +36,7 @@ public class AbilityScoreListItemView implements FxmlView<AbilityScoreListItemVi
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		abilityLabel.textProperty().bind(viewModel.getAbilityName());
+		abilityLabel.setText(resources.getString(viewModel.getAbilityName()));
 		if(viewModel.isScoreNotNull().get()) {
 			abilityScoreField.textProperty().bind(viewModel.getAbilityScore());
 		}

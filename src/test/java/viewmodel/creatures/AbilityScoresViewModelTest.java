@@ -59,7 +59,7 @@ public class AbilityScoresViewModelTest {
 				names.length, list.size());
 		for (int i = 0; i < names.length; i++) {
 			assertEquals("The observable list contains all ability names in the right order",
-					names[i].toString(), list.get(i).getAbilityName().get());
+					names[i].toString(), list.get(i).getAbilityName());
 			/*
 			 * Check ability score. Ignore ability modifier, the
 			 * viewmodel is trusted to be self-consistent.

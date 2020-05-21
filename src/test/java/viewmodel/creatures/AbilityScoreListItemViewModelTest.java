@@ -59,10 +59,10 @@ public class AbilityScoreListItemViewModelTest {
 	@Test
 	public void testGetAbilityName() {
 		assertEquals("The null viewModel must correctly return its ability name",
-				nullAbilityName.toString(), nullViewModel.getAbilityName().get());
+				nullAbilityName.toString(), nullViewModel.getAbilityName());
 		for(Map.Entry<AbilityName, AbilityScoreListItemViewModel> entry : viewModels.entrySet()) {
 			assertEquals("A non-null viewModel must correctly return its ability name",
-					entry.getKey().toString(), entry.getValue().getAbilityName().get());
+					entry.getKey().toString(), entry.getValue().getAbilityName());
 		}
 	}
 

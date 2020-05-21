@@ -18,12 +18,12 @@ import service.parameters.CreatureParameters.AbilityName;
  */
 public class AbilityScoreListItemViewModel implements ViewModel {
 	public AbilityScoreListItemViewModel(AbilityName name, AbilityScore ability) {
-		this.name = new ReadOnlyStringWrapper(name.toString());
+		this.name = name.toString();
 		setAbilityProperties(ability);
 	}
 	
 	private AbilityScore ability;
-	private final ReadOnlyStringWrapper name;
+	private final String name;
 	private final StringProperty score = new SimpleStringProperty();
 	private ReadOnlyStringWrapper modifier = new ReadOnlyStringWrapper();
 	/** This boolean controls whether the score can be modified by the user. */
@@ -47,8 +47,8 @@ public class AbilityScoreListItemViewModel implements ViewModel {
 	/**
 	 * @return the name of the ability as a read-only observable.
 	 */
-	public ObservableStringValue getAbilityName() {
-		return name.getReadOnlyProperty();
+	public String getAbilityName() {
+		return name;
 	}
 	
 	/**

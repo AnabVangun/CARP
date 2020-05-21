@@ -3,6 +3,7 @@ package view.creatures;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import de.saxsys.mvvmfx.FluentViewLoader;
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
 import de.saxsys.mvvmfx.utils.viewlist.CachedViewModelCellFactory;
@@ -24,7 +25,13 @@ public class AbilityScoresView implements Initializable, FxmlView<AbilityScoresV
 	public void initialize(URL location, ResourceBundle resources) {
 		abilityList.setItems(viewModel.getAbilityList());
 		ViewListCellFactory<AbilityScoreListItemViewModel> cellFactory =
-				CachedViewModelCellFactory.createForFxmlView(AbilityScoreListItemView.class);
+				//CachedViewModelCellFactory.createForFxmlView(AbilityScoreListItemView.class);
+				CachedViewModelCellFactory.create(
+						vm -> FluentViewLoader
+						.fxmlView(AbilityScoreListItemView.class)
+						.viewModel(vm)
+						.resourceBundle(resources)
+						.load());
 		abilityList.setCellFactory(cellFactory);
 	}
 

@@ -27,6 +27,7 @@ public class CreatureView implements Initializable, FxmlView<CreatureViewModel>{
         		FluentViewLoader
         		.fxmlView(AbilityScoresView.class)
         		.viewModel(viewModel.getAbilities().get())
+        		.resourceBundle(resources)
         		.load();
 		container.getChildren().add(abilityViewTuple.getView());
 	}
