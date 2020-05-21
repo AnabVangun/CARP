@@ -1,52 +1,34 @@
 package view.creatures;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import de.saxsys.mvvmfx.FluentViewLoader;
+import de.saxsys.mvvmfx.FxmlView;
+import de.saxsys.mvvmfx.InjectViewModel;
+import de.saxsys.mvvmfx.ViewTuple;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.layout.GridPane;
+import viewmodel.creatures.AbilityScoresViewModel;
 import viewmodel.creatures.CreatureViewModel;
 
-import java.util.ArrayList;
-import java.util.List;
+public class CreatureView implements Initializable, FxmlView<CreatureViewModel>{
 
-import service.parameters.CreatureParameters.AbilityName;
-
-/**
- * Mock view to try out MVVM.
- * @author TLM
- *
- */
-public class CreatureView {
+	@FXML
+	GridPane container;
+	@InjectViewModel
 	CreatureViewModel viewModel;
-
-	public CreatureView() {
-		this.viewModel = new CreatureViewModel();
-		int[] lengths = new int[3];
-		List<String[]> lines = new ArrayList<String[]>();
-		for(AbilityName name: AbilityName.values()) {
-			String[] line = new String[] {name.toString(), viewModel.getReadOnlyScores().get(name), 
-					viewModel.getReadOnlyModifiers().get(name)};
-			for (int i = 0; i < lengths.length; i++) {
-				lengths[i] = lengths[i] > line[i].length() ? lengths[i] : line[i].length();
-			}
-			lines.add(line);
-		}
-		StringBuilder builder = new StringBuilder(500);
-		builder.append("Creature:\n");
-		builder.append(String.format("+%" + lengths[0] + "s", ""));
-		builder.append(String.format("+%" + lengths[1] + "s", ""));
-		builder.append(String.format("+%" + lengths[2] + "s+\n", ""));
-		for(String[] line: lines) {
-			builder.append("|");
-			for(int i = 0; i < lengths.length; i++) {
-				builder.append(String.format("%-" + lengths[i] + "s|", line[i]));
-			}
-			builder.append("\n");
-		}
-		System.out.println(builder.toString());
-	}
 	
-	
-
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		new CreatureView();
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		//Include ability scores in the creature sheet
+		ViewTuple<AbilityScoresView, AbilityScoresViewModel> abilityViewTuple = 
+        		FluentViewLoader
+        		.fxmlView(AbilityScoresView.class)
+        		.viewModel(viewModel.getAbilities().get())
+        		.load();
+		container.getChildren().add(abilityViewTuple.getView());
 	}
 
 }

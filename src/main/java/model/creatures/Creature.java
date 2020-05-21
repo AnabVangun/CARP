@@ -33,6 +33,9 @@ public class Creature {
 	 * @return a read-only view of the creature's {@link AbilityScores}.
 	 */
 	public AbilityScores getAbilityScores() {
+		if(this.abilities == null) {
+			return null;
+		}
 		return this.abilities.getROAbilityScores();
 	}
 

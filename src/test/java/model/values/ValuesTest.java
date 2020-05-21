@@ -19,18 +19,4 @@ public class ValuesTest {
 		assertEquals("Negative values work", -5, new Value(-5).getValue());
 		assertEquals("Positive values work", 13, new Value(13).getValue());
 	}
-
-//	@Test
-//	public void testAddBonus() {
-//		v.addBonus(1, Type.RACIAL, true, true);
-//		assertEquals("Adding a simple bonus to a bonusless value must work",
-//				1, v.getValue());
-//		fail("Not yet implemented"); // TODO
-//	}
-//
-//	@Test
-//	public void testRemoveBonus() {
-//		fail("Not yet implemented"); // TODO
-//	}
-
 }

@@ -14,7 +14,8 @@ import service.parameters.CreatureParameters.AbilityName;
 public class AbilityScoresViewModel implements ViewModel {
 	public AbilityScoresViewModel(AbilityScores abilities) {
 		for(AbilityName ability : AbilityName.values()) {
-			abilityList.add(new AbilityScoreListItemViewModel(ability, abilities.getScore(ability)));
+			abilityList.add(new AbilityScoreListItemViewModel(ability, 
+					abilities != null ? abilities.getScore(ability) : null));
 		}
 	}
 	
