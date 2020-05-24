@@ -1,5 +1,9 @@
 package viewmodel.creatures;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.creatures.AbilityScores;
@@ -11,15 +15,16 @@ import service.parameters.CreatureParameters.AbilityName;
  * @author TLM
  */
 public class AbilityScoresViewModel implements SimpleListViewModel<AbilityScoreListItemViewModel> {
+	private ReadOnlyListWrapper<AbilityScoreListItemViewModel> abilityList;
+	
 	public AbilityScoresViewModel(AbilityScores abilities) {
+		List<AbilityScoreListItemViewModel> init = new ArrayList<>();
 		for(AbilityName ability : AbilityName.values()) {
-			abilityList.add(new AbilityScoreListItemViewModel(ability, 
+			init.add(new AbilityScoreListItemViewModel(ability, 
 					abilities != null ? abilities.getScore(ability) : null));
 		}
+		abilityList = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(init));
 	}
-	
-	private ObservableList<AbilityScoreListItemViewModel> abilityList = FXCollections.observableArrayList();
-	
 	/**
 	 * @return the ability scores as a an observable list, where each 
 	 * {@link service.parameters.CreatureParameters.AbilityName} is represented
@@ -27,6 +32,6 @@ public class AbilityScoresViewModel implements SimpleListViewModel<AbilityScoreL
 	 */
 	@Override
 	public ObservableList<AbilityScoreListItemViewModel> getListItems() {
-		return abilityList;
+		return abilityList.getReadOnlyProperty();
 	}
 }

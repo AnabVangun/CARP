@@ -1,0 +1,4 @@
+.emphasis { 
+	-fx-background-color: red; 
+	-fx-font-weight: bold;
+}

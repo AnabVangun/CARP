@@ -14,7 +14,8 @@ import javafx.collections.ObservableList;
 public interface SimpleListViewModel<E extends ViewModel> extends ViewModel {
 	/**
 	 * @return the list of viewModels containing data for each element of the 
-	 * list.
+	 * list. Depending on the implementation, this may or may not be a 
+	 * read-only list.
 	 */
 	public ObservableList<E> getListItems();
 

@@ -9,9 +9,6 @@ import java.util.function.Consumer;
 
 import org.junit.Test;
 
-import model.creatures.AbilityScores;
-import model.creatures.ROAbilityScores;
-import model.creatures.RWAbilityScores;
 import model.exceptions.IllegalAbilityScoreException;
 import model.values.AbilityScore;
 import service.parameters.CreatureParameters.AbilityName;

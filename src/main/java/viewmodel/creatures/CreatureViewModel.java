@@ -16,7 +16,6 @@ import model.creatures.Creature;
 public class CreatureViewModel implements ViewModel{
 	/*
 	 * TODO update CreatureView to modify style of current step in edition bar
-	 * Extend ListCell<String> 
 	 */
 	//TODO add dialog window when creating a new creature to choose how to generate scores
 	//TODO add interface/abstract class for the refresh method for all viewmodels that may become dirty
@@ -66,7 +65,7 @@ public class CreatureViewModel implements ViewModel{
 	/**
 	 * @return the index of the current phase of edition of the creature 
 	 * on display in the list returned by 
-	 * {@link CreatureViewModel#getEditionStatuses()}, or the length of the 
+	 * {@link Creature#EDITION_STATUSES}, or the length of the 
 	 * list if the creature is fully initialised.
 	 */
 	public ObservableIntegerValue getCurrentEditionPhase() {
@@ -74,10 +73,9 @@ public class CreatureViewModel implements ViewModel{
 	}
 	
 	//TODO delete after test
+	@Deprecated
 	public void changeCreature() {
 		creature.finish();
-		refresh();
-		creature = new Creature();
 		refresh();
 	}
 }

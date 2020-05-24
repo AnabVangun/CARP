@@ -36,9 +36,8 @@ public class CreatureView implements Initializable, FxmlView<CreatureViewModel>{
 	
 	private void setUpEditionBar() {
 		//Build edition bar
-		//TODO replace null by the current phase index
 		Parent editionBar = SimpleListView.SimpleListViewFactory(SimpleListView.ListType.EDITION_BAR, 
-				new EditionBarViewModel(null), resources);
+				new EditionBarViewModel(viewModel.getCurrentEditionPhase()), resources);
 		//Display edition bar if and only if the creature is being edited
 		editionBar.managedProperty().bind(editionBar.visibleProperty());
 		editionBar.visibleProperty().bind(viewModel.isInEditMode());
