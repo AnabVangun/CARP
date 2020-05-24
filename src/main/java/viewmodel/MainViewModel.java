@@ -17,6 +17,11 @@ public class MainViewModel implements ViewModel {
 	 * @return a view used to display a creature.
 	 */
 	public Parent newCreature() {
+		/*
+		 * FIXME this is a breach of MVVM: here, a viewModel imports a view
+		 * This method should only return a CreatureViewModel and the view 
+		 * should create the ViewTuple and set the bundle.
+		 */
 		ViewTuple<CreatureView, CreatureViewModel> creatureViewTuple =
 				FluentViewLoader.fxmlView(CreatureView.class)
 				.viewModel(new CreatureViewModel(new Creature()))

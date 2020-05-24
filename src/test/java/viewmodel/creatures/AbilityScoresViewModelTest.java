@@ -54,7 +54,7 @@ public class AbilityScoresViewModelTest {
 	 */
 	private void testGetAbilityListHelper(AbilityScores abilities, AbilityScoresViewModel viewModel) {
 		AbilityName[] names = AbilityName.values();
-		ObservableList<AbilityScoreListItemViewModel> list = viewModel.getAbilityList();
+		ObservableList<AbilityScoreListItemViewModel> list = viewModel.getListItems();
 		assertEquals("The observable list must contain as many items as ability names",
 				names.length, list.size());
 		for (int i = 0; i < names.length; i++) {

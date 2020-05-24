@@ -1,6 +1,5 @@
 package viewmodel.creatures;
 
-import de.saxsys.mvvmfx.ViewModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.creatures.AbilityScores;
@@ -11,7 +10,7 @@ import service.parameters.CreatureParameters.AbilityName;
  * {@link model.creatures.AbilityScores} object.
  * @author TLM
  */
-public class AbilityScoresViewModel implements ViewModel {
+public class AbilityScoresViewModel implements SimpleListViewModel<AbilityScoreListItemViewModel> {
 	public AbilityScoresViewModel(AbilityScores abilities) {
 		for(AbilityName ability : AbilityName.values()) {
 			abilityList.add(new AbilityScoreListItemViewModel(ability, 
@@ -26,7 +25,8 @@ public class AbilityScoresViewModel implements ViewModel {
 	 * {@link service.parameters.CreatureParameters.AbilityName} is represented
 	 * by a viewModel, even if it is null.
 	 */
-	public ObservableList<AbilityScoreListItemViewModel> getAbilityList(){
+	@Override
+	public ObservableList<AbilityScoreListItemViewModel> getListItems() {
 		return abilityList;
 	}
 }

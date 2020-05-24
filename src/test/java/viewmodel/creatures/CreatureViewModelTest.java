@@ -38,10 +38,10 @@ public class CreatureViewModelTest {
 	 */
 	@Test
 	public void testGetAbilities() {
-		ObservableList<AbilityScoreListItemViewModel> actualAbilities = viewModel.getAbilities().get().getAbilityList();
+		ObservableList<AbilityScoreListItemViewModel> actualAbilities = viewModel.getAbilities().get().getListItems();
 		ObservableList<AbilityScoreListItemViewModel> expectedAbilities = 
 				new AbilityScoresViewModel(creature.getAbilityScores())
-				.getAbilityList();
+				.getListItems();
 		assertEquals("The lists must be equal, so their length must match",
 				expectedAbilities.size(),
 				actualAbilities.size());
@@ -57,4 +57,54 @@ public class CreatureViewModelTest {
 		}
 	}
 
+	/**
+	 * Checks that {@link CreatureViewModel#isInEditMode()} returns true if the
+	 * creature is in edit mode and false otherwise.
+	 */
+	@Test
+	public void testIsInEditMode() {
+		creature = new Creature();
+		viewModel = new CreatureViewModel(creature);
+		assertTrue("A not started creature is in edit mode", 
+				viewModel.isInEditMode().get());
+		testIsInEditModeHelper(Creature.InitStatus.ABILITIES);
+		creature.setAbilityScores(AbilityScores.create(AbilityScoresTest.basicAbilityScores()));
+		viewModel.refresh();
+		assertTrue("A creature with just ability scores is in edit mode",
+				viewModel.isInEditMode().get());
+		testIsInEditModeHelper(Creature.InitStatus.REVIEW);//FIXME this fails because the viewmodel is not refreshed
+		creature.finish();
+		viewModel.refresh();
+		assertFalse("A completed creature is not in edit mode",
+				viewModel.isInEditMode().get());
+		testIsInEditModeHelper(Creature.InitStatus.COMPLETED);
+	}
+	
+	private void testIsInEditModeHelper(Creature.InitStatus expectedStatus) {
+		/*
+		 * Creature.InitStatus.COMPLETED is not in the list but its return 
+		 * index is specified to be the length of the list.
+		 */
+		int expectedIndex = -6;
+		if(expectedStatus == Creature.InitStatus.COMPLETED) {
+			expectedIndex = Creature.EDITION_STATUSES.size();
+		} else {
+			int i = 0;
+			boolean search = true;
+			for (Creature.InitStatus status : Creature.EDITION_STATUSES) {
+				if(status == expectedStatus) {
+					expectedIndex = i;
+					search = false;
+					break;
+				}
+				i++;
+			}
+			if (search) {
+				fail("The status is neither an edition status nor COMPLETED.");
+			}
+		}
+		assertEquals("The index returned by getCurrentEditionPhase is consistent with the current status",
+				expectedIndex,
+				viewModel.getCurrentEditionPhase().get());
+	}
 }

@@ -1,7 +1,11 @@
 package viewmodel.creatures;
 
 import de.saxsys.mvvmfx.ViewModel;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableBooleanValue;
+import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableObjectValue;
 import model.creatures.Creature;
 
@@ -10,8 +14,16 @@ import model.creatures.Creature;
  * @author TLM
  */
 public class CreatureViewModel implements ViewModel{
-	private ReadOnlyObjectWrapper<AbilityScoresViewModel> abilities;
-	
+	/*
+	 * TODO update CreatureView to modify style of current step in edition bar
+	 * Extend ListCell<String> 
+	 */
+	//TODO add dialog window when creating a new creature to choose how to generate scores
+	//TODO add interface/abstract class for the refresh method for all viewmodels that may become dirty
+	private ReadOnlyObjectWrapper<AbilityScoresViewModel> abilities = new ReadOnlyObjectWrapper<>();
+	private ReadOnlyBooleanWrapper isEditing = new ReadOnlyBooleanWrapper();
+	private Creature creature;
+	private ReadOnlyIntegerWrapper currentPhaseIndex = new ReadOnlyIntegerWrapper();
 	/**
 	 * Initialises a {@link CreatureViewModel} object to display a 
 	 * {@link Creature object}.
@@ -22,7 +34,8 @@ public class CreatureViewModel implements ViewModel{
 		if(creature == null) {
 			throw new NullPointerException("Tried to initialise a CreatureViewModel on a null creature");
 		}
-		this.abilities = new ReadOnlyObjectWrapper<>(new AbilityScoresViewModel(creature.getAbilityScores()));
+		this.creature = creature;
+		this.refresh();
 	}
 	
 	/**
@@ -30,5 +43,41 @@ public class CreatureViewModel implements ViewModel{
 	 */
 	public ObservableObjectValue<AbilityScoresViewModel> getAbilities(){
 		return this.abilities.getReadOnlyProperty();
+	}
+	
+	/**
+	 * @return true if the creature on display is being edited, false if it is complete.
+	 */
+	public ObservableBooleanValue isInEditMode() {
+		return this.isEditing.getReadOnlyProperty();
+	}
+	
+	/**
+	 * Refresh the observable fields from the model.
+	 * This method should be called if the underlying {@link Creature} object 
+	 * is modified from outside of this object.
+	 */
+	public void refresh() {
+		this.abilities.set(new AbilityScoresViewModel(creature.getAbilityScores()));
+		this.isEditing.set(!creature.isInitialised());
+		this.currentPhaseIndex.set(creature.getInitialisationStatus().ordinal());
+	}
+	
+	/**
+	 * @return the index of the current phase of edition of the creature 
+	 * on display in the list returned by 
+	 * {@link CreatureViewModel#getEditionStatuses()}, or the length of the 
+	 * list if the creature is fully initialised.
+	 */
+	public ObservableIntegerValue getCurrentEditionPhase() {
+		return currentPhaseIndex.getReadOnlyProperty();
+	}
+	
+	//TODO delete after test
+	public void changeCreature() {
+		creature.finish();
+		refresh();
+		creature = new Creature();
+		refresh();
 	}
 }
