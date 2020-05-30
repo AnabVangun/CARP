@@ -1,4 +1,4 @@
-package service.parameters;
+package model.values;
 
 /**
  * Non-instanciable container for the global parameters of the system relative

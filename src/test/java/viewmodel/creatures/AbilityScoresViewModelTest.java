@@ -10,7 +10,7 @@ import org.junit.Test;
 import javafx.collections.ObservableList;
 import model.creatures.AbilityScores;
 import model.creatures.AbilityScoresTest;
-import service.parameters.CreatureParameters.AbilityName;
+import model.creatures.CreatureParameters.AbilityName;
 
 public class AbilityScoresViewModelTest {
 	private AbilityScores abilities;

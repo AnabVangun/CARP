@@ -6,9 +6,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import model.exceptions.IllegalRollException;
-import service.parameters.ValueParameters;
-
 public class RollTest {
 	static long seed = (long) 2;
 
@@ -25,44 +22,44 @@ public class RollTest {
 			new Roll(ValueParameters.MIN_NUMBER_OF_DICE - 4, 6);
 			fail("Less than MIN_NUMBER_OF_DICE (" + ValueParameters.MIN_NUMBER_OF_DICE
 					+ ") dice is not valid");
-		} catch (IllegalRollException e) {}
+		} catch (IllegalArgumentException e) {}
 		try {
 			new Roll(ValueParameters.MIN_NUMBER_OF_DICE - 1, 13);
 			fail("Less than MIN_NUMBER_OF_DICE (" + ValueParameters.MIN_NUMBER_OF_DICE
 					+ ") dice is not valid");
-		} catch (IllegalRollException e) {}
+		} catch (IllegalArgumentException e) {}
 		try {
 			new Roll(1, ValueParameters.MIN_NUMBER_OF_SIDES-3);
 			fail("Less than MIN_NUMBER_OF_SIDES (" + ValueParameters.MIN_NUMBER_OF_SIDES
 					+ ") sides is not valid");
-		} catch (IllegalRollException e) {}
+		} catch (IllegalArgumentException e) {}
 		try {
 			new Roll(5, ValueParameters.MIN_NUMBER_OF_SIDES-1);
 			fail("Less than MIN_NUMBER_OF_SIDES (" + ValueParameters.MIN_NUMBER_OF_SIDES
 					+ ") sides is not valid");
-		} catch (IllegalRollException e) {}
+		} catch (IllegalArgumentException e) {}
 		try {
 			new Roll(ValueParameters.MIN_NUMBER_OF_DICE - 1, ValueParameters.MIN_NUMBER_OF_SIDES - 1);
 			fail("Less than MIN_NUMBER_OF_DICE (" + ValueParameters.MIN_NUMBER_OF_DICE
 					+ ") dice and less than MIN_NUMBER_OF_DICE ("
 					+ ValueParameters.MIN_NUMBER_OF_SIDES + ") sides is not valid");
-		} catch (IllegalRollException e) {}
+		} catch (IllegalArgumentException e) {}
 		try {
 			new Roll(ValueParameters.MAX_NUMBER_OF_DICE + 1, 6);
 			fail("More than MAX_NUMBER_OF_DICE (" + ValueParameters.MAX_NUMBER_OF_DICE
 					+ ") dice is not valid");
-		} catch (IllegalRollException e) {}
+		} catch (IllegalArgumentException e) {}
 		try {
 			new Roll(5, ValueParameters.MAX_NUMBER_OF_SIDES + 1);
 			fail("More than MAX_NUMBER_OF_SIDES (" + ValueParameters.MAX_NUMBER_OF_SIDES
 					+ ") sides is not valid");
-		} catch (IllegalRollException e) {}
+		} catch (IllegalArgumentException e) {}
 		try {
 			new Roll(ValueParameters.MAX_NUMBER_OF_DICE + 25, ValueParameters.MAX_NUMBER_OF_SIDES + 12);
 			fail("More than MAX_NUMBER_OF_DICE (" + ValueParameters.MAX_NUMBER_OF_DICE
 					+ ") dice and more than MAX_NUMBER_OF_DICE ("
 					+ ValueParameters.MAX_NUMBER_OF_SIDES + ") sides is not valid");
-		} catch (IllegalRollException e) {}
+		} catch (IllegalArgumentException e) {}
 	}
 
 	/**

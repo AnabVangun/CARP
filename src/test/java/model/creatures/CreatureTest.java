@@ -6,8 +6,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import model.exceptions.IllegalAbilityScoreException;
-import service.parameters.CreatureParameters.AbilityName;
+import model.creatures.CreatureParameters.AbilityName;
 
 public class CreatureTest {
 
@@ -34,19 +33,23 @@ public class CreatureTest {
 		try {
 			creature.setAbilityScores(null);
 			fail("A creature should throw an exception when trying to set null ability scores");
-		} catch (IllegalAbilityScoreException e) {}
+		} catch (NullPointerException e) {}
 		/*
 		 * XXX when AbilityScores implements mutability, check that the 
 		 * creature makes a deep copy of the object.
 		 */
 	}
 	
+	/**
+	 * Checks that {@link Creature#isInitialised()} returns true if and only if
+	 * the creature is complete.
+	 */
 	@Test
 	public void testIsInitialised() {
 		Creature creature = new Creature();
-		assertFalse("A non initialised creature is not complete", creature.isInitialised());
+		assertFalse("A non initialised creature is not fully initialised", creature.isInitialised());
 		creature.setAbilityScores(AbilityScores.create(AbilityScoresTest.basicAbilityScores()));
-		assertFalse("A creature with only ability scores is not initialised", creature.isInitialised());
+		assertFalse("A creature with only ability scores is not fully initialised", creature.isInitialised());
 		creature.finish();
 		assertTrue("A fully initialised creature is initialised", creature.isInitialised());
 	}

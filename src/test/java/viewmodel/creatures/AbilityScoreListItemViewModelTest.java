@@ -11,7 +11,7 @@ import org.junit.Test;
 import javafx.beans.value.ObservableBooleanValue;
 import model.creatures.AbilityScores;
 import model.creatures.AbilityScoresTest;
-import service.parameters.CreatureParameters.AbilityName;
+import model.creatures.CreatureParameters.AbilityName;
 import model.values.AbilityScore;
 
 public class AbilityScoreListItemViewModelTest {

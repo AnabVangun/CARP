@@ -5,14 +5,16 @@ import static org.junit.Assert.*;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.junit.Test;
 
-import model.exceptions.IllegalAbilityScoreException;
+import model.creatures.CreatureParameters.AbilityName;
 import model.values.AbilityScore;
-import service.parameters.CreatureParameters.AbilityName;
-import service.parameters.ValueParameters;
+import model.values.ValueParameters;
+import model.creatures.AbilityScores.InvalidityCode;
 
 public class AbilityScoresTest {
 	/*
@@ -21,44 +23,60 @@ public class AbilityScoresTest {
 	 */
 
 	/**
-	 * Checks that the {@link RWAbilityScores#RWAbilityScores(java.util.EnumMap)} 
-	 * constructor accepts a map with valid parameters (all abilities with 
-	 * valid model.values, all mandatory abilities with valid model.values) and rejects a
-	 * map with invalid model.values (some mandatory abilities missing, some 
-	 * abilities with invalid model.values, or both).
+	 * Checks that the {@link AbilityScores}
+	 * constructor accepts a map with valid parameters (abilities with 
+	 * valid values: all, some or none) and rejects a
+	 * map with invalid values (some 
+	 * abilities with invalid values) and null.
 	 * Additional test: changing the input map to the constructor does not
 	 * affect the object.
 	 * Also checks the {@link 
-	 * RWAbilityScores#getModifier(model.creatures.AbilityScores.AbilityName)} method to 
+	 * AbilityScores#getModifier(model.creatures.AbilityScores.AbilityName)} method to 
 	 * verify the constructor.
 	 */
 	@Test
-	public void testRWConstructor() {
+	public void testConstructor() {
+		testConstructorHelper(abilities -> (new RWAbilityScores(abilities)));
+		testConstructorHelper(abilities -> AbilityScores.create(abilities));
+	}
+	/**
+	 * Checks that the input function 
+	 * accepts a map with valid parameters (abilities with 
+	 * valid values: all, some or none) and rejects a
+	 * map with invalid values (some 
+	 * abilities with invalid values) and null.
+	 * Additional test: changing the input map to the constructor does not
+	 * affect the object.
+	 * Also checks the {@link 
+	 * AbilityScores#getModifier(model.creatures.AbilityScores.AbilityName)} method to 
+	 * verify the constructor.
+	 */
+	private void testConstructorHelper(Function<Map<AbilityName, Integer>, AbilityScores> function) {
 		AbilityScores test;
-		//OK case: all abilities with valid model.values
+		//OK case: all abilities with valid values
 		EnumMap<AbilityName, Integer> abilities = basicAbilityScores();
-		assertNotNull("All abilities with valid model.values makes a valid AbilityScores object",
-				test = new RWAbilityScores(abilities));
-		//Verify the model.values
+		assertNotNull("All abilities with valid values makes a valid AbilityScores object",
+				test = function.apply(abilities));
+		//Verify the values
 		for(AbilityName ability: abilities.keySet()) {
-			assertEquals("The constructor must not modify the valid model.values",
+			assertEquals("The constructor must not modify the valid values",
 					abilities.get(ability).intValue(), test.getScore(ability).getValue());
 		}
-		//OK case: all mandatory abilities with valid model.values
+		//OK case: all mandatory abilities with valid values
 		abilities.clear();
 		int i = ValueParameters.MIN_ABILITY_SCORE;
 		for(AbilityName ability : AbilityScores.MANDATORY_ABILITIES) {
-			abilities.put(ability, 10-i);
+			abilities.put(ability, i);
 			i++;
 		}
-		assertNotNull("All mandatory abilities with valid model.values makes a valid AbilityScores object",
-				test = new RWAbilityScores(abilities));
+		assertNotNull("All mandatory abilities with valid values makes a valid AbilityScores object",
+				test = function.apply(abilities));
 		for(AbilityName ability : AbilityName.values()) {
 			if(AbilityScores.MANDATORY_ABILITIES.contains(ability)) {
-				assertEquals("The constructor must not modify the valid model.values", 
+				assertEquals("The constructor must not modify the valid values", 
 						abilities.get(ability).intValue(), test.getScore(ability).getValue());
 			} else {
-				assertNull("getScore must return null for the unspecified model.values",
+				assertNull("getScore must return null for the unspecified values",
 						test.getScore(ability));
 			}
 		}
@@ -76,48 +94,29 @@ public class AbilityScoresTest {
 			}
 		}
 		/*
-		 * KO cases: 
-		 * 1. some abilities with invalid model.values
-		 * 2. mandatory ability missing
-		 * 3. both
+		 * KO case: some abilities with invalid values
+		 * Invalid values do not raise exceptions anymore
 		 */
-		for (int k = 1; i < 4; i++) {
-			for (AbilityName mandatoryAbility : AbilityScores.MANDATORY_ABILITIES) {
-				abilities.clear();
-				for (AbilityName ability : AbilityName.values()) {
-					if(k > 1 && ability.equals(mandatoryAbility)) {
-						continue;
-					}
-					abilities.put(ability, 
-							(k == 2 ? 10 : ValueParameters.MAX_ABILITY_SCORE + 1));
-				}
-				try {
-					new RWAbilityScores(abilities);
-					String errorMessage;
-					switch (k) {
-					case 1:
-						errorMessage = "The constructor should fail on invalid model.values";
-						break;
-					case 2:
-						errorMessage = "The constructor should fail if mandatory abilities are missing";
-						break;
-					case 3:
-						errorMessage = "The constructor should fail if mandatory abilities are missing and with invalid model.values";
-						break;
-					default:
-						errorMessage = "An unexpected error has caused the test to fail";
-						break;
-					}
-					fail(errorMessage);
-				} catch (IllegalAbilityScoreException e) {}
-			}
-		}
+//		for (i = 0; i < AbilityName.values().length ; i ++) {
+//			abilities.clear();
+//			for (int j = i; j >= 0; j--) {
+//				abilities.put(AbilityName.values()[j], ValueParameters.MAX_ABILITY_SCORE + 1);
+//				try {
+//					function.apply(abilities);
+//					fail("The constructor should fail on invalid values");
+//				} catch (IllegalArgumentException e) {}
+//			}
+//		}
+		//KO case: null input
+		try {
+			function.apply((Map<CreatureParameters.AbilityName,Integer>) null);
+		} catch (NullPointerException e) {};
 	}
 
 	/**
 	 * Checks that 
 	 * {@link AbilityScores#getModifier(model.creatures.AbilityScores.AbilityName)}
-	 * is consistent {@link AbilityScore#computeModifier(int)} for given model.values
+	 * is consistent {@link AbilityScore#computeModifier(int)} for given values
 	 * and that it returns 0 for non-initialised model.values.
 	 * This test covers both {@link RWAbilityScores} and {@link ROAbilityScores}.
 	 */
@@ -141,7 +140,7 @@ public class AbilityScoresTest {
 				assertEquals("The two methods must be equal",
 						AbilityScore.computeModifier(abilities.get(ability)),
 						RWtest.getModifier(ability));
-				assertEquals("The read-only ability scores must return consistent model.values",
+				assertEquals("The read-only ability scores must return consistent values",
 						RWtest.getModifier(ability),
 						ROtest.getModifier(ability));
 			}
@@ -188,11 +187,11 @@ public class AbilityScoresTest {
 		testIteratorHelper(rwTest);
 		testIteratorHelper(roTest);
 	}
-	
+
 	/**
 	 * Checks that the iterator returned by 
-	 * {@link AbilityScores#iterator()} iterates over all defined model.values in 
-	 * the {@link AbilityScores} used to build it. Also checks that the model.values
+	 * {@link AbilityScores#iterator()} iterates over all defined values in 
+	 * the {@link AbilityScores} used to build it. Also checks that the values
 	 * are the same as in the object.
 	 * @param test	an initialised {@link AbilityScores} object.
 	 * @throws AssertionError	if one of the sub-tests fails.
@@ -212,7 +211,7 @@ public class AbilityScoresTest {
 					test.getScore(name));
 		}
 	}
-	
+
 	/**
 	 * Checks that {@link RWAbilityScores#RWAbilityScores(AbilityScores)} 
 	 * returns a {@link RWAbilityScores} object that is a deep copy of the 
@@ -238,7 +237,7 @@ public class AbilityScoresTest {
 		testDeepCopyConstructorHelper(rwTest);
 		testDeepCopyConstructorHelper(roTest);
 	}
-	
+
 	/**
 	 * Checks that the copy constructor indeed makes a deep copy of the input
 	 * {@link AbilityScores} object.
@@ -268,7 +267,7 @@ public class AbilityScoresTest {
 		oneWayChecker.accept(input);
 		oneWayChecker.accept(test);
 	}
-	
+
 	/**
 	 * @return a map with a different value for each ability score, starting 
 	 * at 10.
@@ -282,5 +281,116 @@ public class AbilityScoresTest {
 			i++;
 		}
 		return abilities;
+	}
+	
+	/**
+	 * Checks that {@link AbilityScores#checkValidity()} and 
+	 * {@link AbilityScores#checkAbilityScoresValidity(Map)} return a map
+	 * containing an entry for each invalid entry.
+	 */
+	@Test
+	public void testCheckValidity() {
+		testCheckValidityHelper(abilities -> (new RWAbilityScores(abilities)));
+		testCheckValidityHelper(abilities -> AbilityScores.create(abilities));
+	}
+	
+	private void testCheckValidityHelper(Function<Map<AbilityName, Integer>, AbilityScores> function) {
+		final Map<AbilityName, InvalidityCode> expected = new EnumMap<AbilityName, InvalidityCode>(AbilityName.class);
+		/*
+		 * Helper method.
+		 * Remove some mandatory abilities from its first argument, and add 
+		 * them to its second argument as missing
+		 */
+		BiConsumer<Map<AbilityName, Integer>, Map<AbilityName, InvalidityCode>> removeAbility = 
+				(abilities, result) -> {
+					int i = 0;
+					for(AbilityName toRemove: AbilityScores.MANDATORY_ABILITIES) {
+						if (i%2 == 0) {
+							if(abilities.remove(toRemove) == null) {
+								fail("The ability should have been removed, something went wrong");
+							}
+							result.put(toRemove, InvalidityCode.MISSING);
+						}
+						i++;
+					}
+				};
+		/*
+		 * Helper method.
+		 * Modify the value associated with some keys in its first argument
+		 * to make them illegally low, and add 
+		 * them to its second argument as too low.
+		 */
+		BiConsumer<Map<AbilityName, Integer>, Map<AbilityName, InvalidityCode>> lowerAbility =
+				(abilities, result) -> {
+					int i = 0;
+					for(AbilityName toModify: abilities.keySet()) {
+						if(i%2 == 0) {
+							if(result.get(toModify) != null) {
+								fail("The ability should not already be an error case");
+							}
+							abilities.put(toModify, ValueParameters.MIN_ABILITY_SCORE - (i+1));
+							result.put(toModify, InvalidityCode.TOO_LOW);
+						}
+					}
+				};
+		/*
+		 * Helper method.
+		 * Modify the value associated with some keys in its first argument
+		 * to make them illegally high, and add 
+		 * them to its second argument as too high.
+		 */
+		BiConsumer<Map<AbilityName, Integer>, Map<AbilityName, InvalidityCode>> raiseAbility =
+				(abilities, result) -> {
+					int i = 0;
+					for(AbilityName toModify: abilities.keySet()) {
+						if(i%2 == 1) {
+							if(result.get(toModify) != null) {
+								fail("The ability should not already be an error case");
+							}
+							abilities.put(toModify, ValueParameters.MAX_ABILITY_SCORE + (i+1));
+							result.put(toModify, InvalidityCode.TOO_HIGH);
+						}
+					}
+				};
+		/*
+		 * Helper method.
+		 * Initialise all test variables, set up the input test conditions and 
+		 * verify that the result is consistent with the expectations.
+		 */
+		Consumer<BiConsumer<Map<AbilityName, Integer>, Map<AbilityName, InvalidityCode>>> performTest = 
+				(setUpTest) -> {
+					expected.clear();
+					AbilityScores test;
+					Map<AbilityName, Integer> input;
+					input = basicAbilityScores();
+					setUpTest.accept(input, expected);
+					test = function.apply(input);
+					assertEquals(expected, test.checkValidity());
+					assertEquals(expected, AbilityScores.checkAbilityScoresValidity(input));
+				};
+		//Case 1: some mandatory abilities missing
+		performTest.accept((abilities, result) -> removeAbility.accept(abilities, result));
+		//Case 2: some abilities with values too low
+		performTest.accept((abilities, result) -> lowerAbility.accept(abilities, result));
+		//Case 3: some abilities with values too high
+		performTest.accept((abilities, result) -> raiseAbility.accept(abilities, result));
+		//Case 4: some mandatory abilities missing and some abilities too low
+		performTest.accept((abilities, result) -> {
+			removeAbility.accept(abilities, result);
+			lowerAbility.accept(abilities, result);
+		});
+		//Case 5: some mandatory abilities missing and some abilities too high
+		performTest.accept((abilities, result) -> {
+			removeAbility.accept(abilities, result);
+			raiseAbility.accept(abilities, result);
+		});
+		//Case 6: mandatory abilities missing, abilities too low and too high
+		performTest.accept((abilities, result) -> {
+			removeAbility.accept(abilities, result);
+			lowerAbility.accept(abilities, result);
+			raiseAbility.accept(abilities, result);
+		});
+		//Case 7: nothing wrong
+		performTest.accept((abilities, result) -> {});
 	}
 }

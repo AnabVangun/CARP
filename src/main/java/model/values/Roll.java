@@ -8,40 +8,39 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import model.exceptions.IllegalRollException;
-import service.parameters.ValueParameters;
-
 /**
  * Container for a set of dice, grouped by number of sides.
- * The set may contain at most 999 dice, and each die may have at most 999 
- * sides.
  * @author TLM
  */
 public class Roll {
-	// Set of dice included in the roll
+	/** Set of dice included in the roll. */
 	private Map<Integer, int[]> dice;
-	// Bonus to add to the roll
-	//private Value modifier;
+	/** State of the dice: true when the dice have been rolled. */
 	private boolean rolled = false;
-	/*
-	 * RNG used for all the dice roll, static so that it may be seeded for 
-	 * unit testing.
+	/**
+	 * RNG used for all the dice roll.
 	 */
 	private static Random rng = new Random();
 	
 	/**
 	 * Initialises a simple set of identical dice.
-	 * The set may contain at most 999 dice, and each die may have at most 999 
-	 * sides.
-	 * @param i	number of dice included in the set
-	 * @param j	number of sides of the dice in the set
+	 * The set may contain at most {@link ValueParameters#MAX_NUMBER_OF_DICE} 
+	 * dice, and each die may have at most 
+	 * {@link ValueParameters#MAX_NUMBER_OF_SIDES} sides.
+	 * @param numberOfDice included in the set
+	 * @param numberOfSides of the dice in the set
 	 */
 	public Roll(int numberOfDice, int numberOfSides) {
 		if(numberOfDice < ValueParameters.MIN_NUMBER_OF_DICE 
 				|| numberOfSides < ValueParameters.MIN_NUMBER_OF_SIDES 
 				|| numberOfDice > ValueParameters.MAX_NUMBER_OF_DICE 
 				|| numberOfSides > ValueParameters.MAX_NUMBER_OF_SIDES) {
-			throw new IllegalRollException(numberOfDice, numberOfSides);
+			throw new IllegalArgumentException(
+					"There must be between " + ValueParameters.MIN_NUMBER_OF_DICE + " and "
+					+ ValueParameters.MAX_NUMBER_OF_DICE + " dice (received " + 
+					numberOfDice + ") with between " + ValueParameters.MIN_NUMBER_OF_SIDES
+					+ " and " + ValueParameters.MAX_NUMBER_OF_SIDES + " sides (received " 
+					+ numberOfSides + ").");
 		}
 		dice = new HashMap<Integer, int[]>();
 		dice.put(numberOfSides, new int[numberOfDice]);

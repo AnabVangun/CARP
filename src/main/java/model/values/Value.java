@@ -2,7 +2,7 @@ package model.values;
 
 /**
  * Container for the base numerical unit of measurement. A Value contains a 
- * base value that may be modified by different instances of {@link Bonus}.
+ * base value.
  */
 public class Value {
     private int value;

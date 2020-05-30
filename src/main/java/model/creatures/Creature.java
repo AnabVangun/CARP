@@ -40,9 +40,8 @@ public class Creature {
 	/**
 	 * Initialise an empty creature.
 	 * After this constructor has been called, the creature is not fully
-	 * initialised yet: it needs ability scores, a race, optionally class
-	 * levels, skill ranks,
-	 * feats, equipment, and finishing details.
+	 * initialised yet: it needs to go through every step of the initialisation
+	 * process.
 	 */
 	public Creature() {}
 	
@@ -89,6 +88,9 @@ public class Creature {
 		return this.initStatus == InitStatus.COMPLETED;
 	}
 
+	/**
+	 * Advances the initialisation process by one step.
+	 */
 	private void incrementStatus() {
 		switch(this.initStatus) {
 		case ABILITIES:

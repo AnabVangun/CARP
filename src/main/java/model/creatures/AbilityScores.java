@@ -11,25 +11,48 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import model.exceptions.IllegalAbilityScoreException;
+import model.creatures.CreatureParameters.AbilityName;
 import model.values.AbilityScore;
 import model.values.Value;
-import service.parameters.CreatureParameters.AbilityName;
-import service.parameters.ValueParameters;
+import model.values.ValueParameters;
 
 /**
- * Set of the six abilities of any creature.
+ * Set of the six abilities of a creature.
  * @author TLM
  */
 public interface AbilityScores extends Iterable<Map.Entry<AbilityName, AbilityScore>>{
 	/**
-	 * Public unmodifiable reference to the subset of abilities that all 
+	 * Unmodifiable subset of abilities that all 
 	 * creatures must have. The other abilities are optional, some creatures 
 	 * may not have them.
 	 */
 	public final static Set<AbilityName> MANDATORY_ABILITIES = Collections.unmodifiableSet(EnumSet.of(
 			AbilityName.DEXTERITY, AbilityName.WISDOM, AbilityName.CHARISMA));
+	
+	/**
+	 * Describe the reason why  an {@link AbilityScore} object is invalid.
+	 * @author TLM
+	 */
+	static enum InvalidityCode{
+		/**The required ability is missing.	 */
+		MISSING("This required ability is missing"),
+		/** The ability is below the minimum value. */
+		TOO_LOW("This ability is below the minimum value (" + ValueParameters.MIN_ABILITY_SCORE + ")"),
+		/** The ability is above the maximum value. */
+		TOO_HIGH("This ability is above the maximum value (" + ValueParameters.MAX_ABILITY_SCORE + ")");
+		
+		private final String errorMessage;
+		private InvalidityCode(String s) {
+			this.errorMessage = s;
+		}
+		
+		/** @return the error message associated with the invalidity code. */
+		String getErrorMessage() {
+			return this.errorMessage;
+		}
+	}
 	
 	/**
 	 * Returns the modifier associated with the given ability.
@@ -40,61 +63,60 @@ public interface AbilityScores extends Iterable<Map.Entry<AbilityName, AbilitySc
 	public int getModifier(AbilityName ability);
 	
 	/**
-	 * Returns specified the {@link model.values.AbilityScore}. May return 
+	 * Returns the {@link AbilityScore}. May return 
 	 * {@link null} if the ability is not defined for the creature.
-	 * @param ability
+	 * @param ability queried.
 	 * @return an {@link AbilityScore} object or {@link null}.
 	 */
 	public AbilityScore getScore(AbilityName ability);
 	
 	/**
-	 * Checks that the input is valid to build an AbilityScore.
+	 * Checks that the input is valid to build an AbilityScore. The input is 
+	 * valid if the returned map is empty.
 	 * @param values	the input to check.
-	 * @param fail		if true, raise an {@link IllegalAbilityScoreException}
-	 * instead of returning false.
-	 * @return	true if all mandatory abilities are present, and all present 
-	 * abilities have valid values.
+	 * @return	a map containing, for each invalid ability score, the reason 
+	 * why it's invalid.
+	 * @throws NullPointerException if value if null.
 	 */
-	public static boolean isValidAbilityScoreInput(Map<AbilityName, Integer> values, boolean fail) {
+	public static Map<AbilityName, InvalidityCode> checkAbilityScoresValidity(Map<AbilityName, Integer> values) {
 		//Reject null input
 		if(values == null) {
-			if(fail) {
-				throw new IllegalAbilityScoreException(IllegalAbilityScoreException.Cause.NULL);
-			}
-			return false;
+			throw new NullPointerException();
 		}
+		Map<AbilityName, InvalidityCode> result = new EnumMap<>(AbilityName.class);
 		//Check if all mandatory abilities are present
 		if(!MANDATORY_ABILITIES.containsAll(values.keySet())) {
 			//If not, find the missing one and throw an exception
 			for(AbilityName ability: MANDATORY_ABILITIES) {
 				if (!values.containsKey(ability)) {
-					if(fail) {
-						throw new IllegalAbilityScoreException(ability.toString(), values.keySet().toString());
-					}
-					return false;
+					result.put(ability, InvalidityCode.MISSING);
 				}
 			}
 		}
-		//Verify that all model.values are valid
+		//Verify that all values are valid
 		for(Entry<AbilityName, Integer> entry : values.entrySet()) {
 			if(entry.getValue() < ValueParameters.MIN_ABILITY_SCORE 
 					|| entry.getValue() > ValueParameters.MAX_ABILITY_SCORE) {
-				if(fail) {
-					throw new IllegalAbilityScoreException(entry.getKey().toString(), entry.getValue());
-				}
-				return false;
+				result.put(entry.getKey(),
+						entry.getValue() < ValueParameters.MIN_ABILITY_SCORE ? 
+								InvalidityCode.TOO_LOW : InvalidityCode.TOO_HIGH);
 			}
 		}
-		return true;
+		return result;
 	}
+	
+	/**
+	 * Checks that the AbilityScores object is valid as per 
+	 * {@link AbilityScores#checkAbilityScoresValidity(Map)}.
+	 * @return a map containing for each invalid ability the reason why it is 
+	 * invalid.
+	 */
+	public Map<AbilityName, InvalidityCode> checkValidity();
 
 	/**
-	 * Initialises an {@link AbilityScores} object with model.values for at least 
-	 * some of the abilities.
-	 * @param model.values	must contain the mandatory abilities: DEXTERITY, 
-	 * WISDOM, and CHARISMA. May also contain the optional abilities.
-	 * @throws {@link model.exceptions.IllegalAbilityScoreException} if a mandatory 
-	 * ability is missing or if a value is invalid.
+	 * Initialises an AbilityScores object.
+	 * @param values	map assigning the base scores to the abilities. May be 
+	 * empty but not null.
 	 */
 	public static AbilityScores create(Map<AbilityName, Integer> values) {
 		return new RWAbilityScores(values);
@@ -104,7 +126,7 @@ public interface AbilityScores extends Iterable<Map.Entry<AbilityName, AbilitySc
 /**
  * Read-only version of the {@link AbilityScores} interface. This class
  * encapsulates a read-write implementation of the interface. Any change 
- * brought to the RW object is reflected by the RO one.
+ * brought to the read-write object is reflected by the read-only one.
  * @author TLM
  */
 class ROAbilityScores implements AbilityScores{
@@ -134,6 +156,11 @@ class ROAbilityScores implements AbilityScores{
 	public Iterator<Map.Entry<AbilityName, AbilityScore>> iterator() {
 		return abilities.iterator();
 	}
+
+	@Override
+	public Map<AbilityName, InvalidityCode> checkValidity() {
+		return abilities.checkValidity();
+	}
 	
 }
 
@@ -141,7 +168,7 @@ class ROAbilityScores implements AbilityScores{
  * Read-write implementation of the {@link AbilityScores} interface.
  * This class offers additional methods to increment abilities or add bonuses.
  * Classes using a {@link RWAbilityScores} attribute should never expose it 
- * directly but only expose its {@link ROAbilityScores} counterpart.
+ * directly but only expose its {@link ROAbilityScores} wrapper.
  * @author TLM
  */
 class RWAbilityScores implements AbilityScores{
@@ -151,16 +178,15 @@ class RWAbilityScores implements AbilityScores{
 	private EnumMap<AbilityName, AbilityScoreType> abilities;
 
 	/**
-	 * Initialises an {@link AbilityScores} object with model.values for at least 
-	 * some of the abilities.
-	 * @param model.values	must contain the mandatory abilities: DEXTERITY, 
-	 * WISDOM, and CHARISMA. May also contain the optional abilities.
-	 * @throws {@link model.exceptions.IllegalAbilityScoreException} if a mandatory 
-	 * ability is missing or if a value is invalid.
+	 * Initialises an {@link AbilityScores} object.
+	 * @param values	map assigning the base scores to the abilities. May be 
+	 * empty but not null.
+	 * @throws NullPointerException if the input is null.
 	 */
 	public RWAbilityScores(Map<AbilityName, Integer> values) {
-		//Validate input
-		AbilityScores.isValidAbilityScoreInput(values, true);
+		if(values == null) {
+			throw new NullPointerException("Cannot instantiate an abilityScores on null input");
+		}
 		this.abilities = new EnumMap<AbilityName, AbilityScoreType>(AbilityName.class);
 		for(Entry<AbilityName, Integer> entry : values.entrySet()) {
 			this.abilities.put(entry.getKey(), new AbilityScoreType(entry.getValue()));
@@ -168,14 +194,43 @@ class RWAbilityScores implements AbilityScores{
 	}
 	
 	/**
-	 * Initialises a {@link RWAbilityScores} object by making a deep-copy of
+	 * Throws an {@link java.lang.IllegalArgumentException} describing how 
+	 * the values are invalid.
+	 * @param invalidity	map of the invalidity reasons. Assumed to be 
+	 * neither null nor empty.
+	 * @param values		map of the values that are invalid.
+	 * @throws IllegalArgumentException
+	 */
+	private void rejectInvalidAbilityScoreInput(Map<AbilityName, InvalidityCode> invalidity, 
+			Map<AbilityName, Integer> values) 
+			throws IllegalArgumentException{
+		String errorMessage = "Tried to create an invalid AbilityScores object:";
+		for(Map.Entry<AbilityName, InvalidityCode> entry : invalidity.entrySet()) {
+			errorMessage += " " + entry.getKey() + " : " + entry.getValue().getErrorMessage();
+			switch(entry.getValue()) {
+			case MISSING:
+				break;
+			case TOO_HIGH:
+			case TOO_LOW:
+				errorMessage += " : " + values.get(entry.getKey());
+				break;
+			default:
+				break;
+			}
+			errorMessage += ";";
+		}
+		throw new IllegalArgumentException(errorMessage);
+	}
+	
+	/**
+	 * Initialises a RWAbilityScores object by making a deep-copy of
 	 * the input {@link AbilityScores} object.
 	 * @param abilities	object to copy.
 	 */
 	public RWAbilityScores(AbilityScores abilities) {
 		//Reject null input
 		if(abilities == null) {
-			throw new IllegalAbilityScoreException(IllegalAbilityScoreException.Cause.NULL);
+			throw new NullPointerException("Tried to deep-copy null");
 		}
 		this.abilities = new EnumMap<AbilityName, AbilityScoreType>(AbilityName.class);
 		for(Map.Entry<AbilityName, AbilityScore> entry : abilities) {
@@ -216,7 +271,7 @@ class RWAbilityScores implements AbilityScores{
 			}
 			@Override
 			public int getValue() {
-				throw new IllegalAbilityScoreException(IllegalAbilityScoreException.Cause.UNDEFINED);
+				throw new UnsupportedOperationException("Tried to call getValue on the UNDEFINED ability score");
 			}
 		};
 		/**
@@ -232,7 +287,7 @@ class RWAbilityScores implements AbilityScores{
 		 * @param value	to copy.
 		 */
 		AbilityScoreType(AbilityScore value){
-			//XXX This should probably fail if any bonuses apply to value
+			//XXX Handle bonuses properly
 			super(value.getValue());
 		}
 
@@ -259,5 +314,14 @@ class RWAbilityScores implements AbilityScores{
 				return new AbstractMap.SimpleImmutableEntry<AbilityName, AbilityScore>(name, getScore(name));
 			}
 		};
+	}
+
+	@Override
+	public Map<AbilityName, InvalidityCode> checkValidity() {
+		//TODO test this method
+		return AbilityScores.checkAbilityScoresValidity(
+				//Convert Map<AbilityName, AbilityScores> into Map<AbilityName, Integer>
+				this.abilities.entrySet()
+				.stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getValue())));
 	};
 }

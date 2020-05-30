@@ -7,7 +7,7 @@ import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.creatures.AbilityScores;
-import service.parameters.CreatureParameters.AbilityName;
+import model.creatures.CreatureParameters.AbilityName;
 
 /**
  * ViewModel used to display an 
@@ -27,7 +27,7 @@ public class AbilityScoresViewModel implements SimpleListViewModel<AbilityScoreL
 	}
 	/**
 	 * @return the ability scores as a an observable list, where each 
-	 * {@link service.parameters.CreatureParameters.AbilityName} is represented
+	 * {@link model.creatures.CreatureParameters.AbilityName} is represented
 	 * by a viewModel, even if it is null.
 	 */
 	@Override

@@ -1,4 +1,4 @@
-package service.parameters;
+package model.creatures;
 /**
  * Non-instanciable container for the global parameters of the system relative
  * to the creatures.
@@ -12,7 +12,7 @@ public class CreatureParameters {
 	 */
 	public static enum AbilityGenerationMethod{
 		/**
-		 * Roll 4d6 six times, discard lowest score and assign the results
+		 * Roll (3+n)d6 six times, discard lowest score and assign the results
 		 * between the six ability scores. Its parameter is the number of 
 		 * extra dice that will be discarded for each ability score: it must be
 		 * above 0.

@@ -6,6 +6,10 @@ import org.junit.Test;
 
 public class AbilityScoreTest {
 
+	/**
+	 * Checks that {@link AbilityScore#computeModifier(int)} returns consistent
+	 * results for the scores from 0 to 23.
+	 */
 	@Test
 	public void testComputeModifier() {
 		int[] modifiers = new int[] {-5, -5, -4, -4, -3, -3, -2, -2, -1, -1, 0,

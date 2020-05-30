@@ -14,10 +14,6 @@ import model.creatures.Creature;
  * @author TLM
  */
 public class CreatureViewModel implements ViewModel{
-	/*
-	 * TODO update CreatureView to modify style of current step in edition bar
-	 */
-	//TODO add dialog window when creating a new creature to choose how to generate scores
 	//TODO add interface/abstract class for the refresh method for all viewmodels that may become dirty
 	private ReadOnlyObjectWrapper<AbilityScoresViewModel> abilities = new ReadOnlyObjectWrapper<>();
 	private ReadOnlyBooleanWrapper isEditing = new ReadOnlyBooleanWrapper();

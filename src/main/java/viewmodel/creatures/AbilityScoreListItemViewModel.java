@@ -8,8 +8,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableStringValue;
+import model.creatures.CreatureParameters.AbilityName;
 import model.values.AbilityScore;
-import service.parameters.CreatureParameters.AbilityName;
 
 /**
  * ViewModel used to display each ability score in an 
