@@ -30,7 +30,7 @@ public class AbilityScoresViewModelTest {
 		}
 		abilities = AbilityScores.create(map);
 		viewModel = new AbilityScoresViewModel(abilities);
-		nullVM = new AbilityScoresViewModel(null);
+		nullVM = new AbilityScoresViewModel(AbilityScores.create(null));
 	}
 
 	/**
@@ -64,8 +64,8 @@ public class AbilityScoresViewModelTest {
 			 * Check ability score. Ignore ability modifier, the
 			 * viewmodel is trusted to be self-consistent.
 			 */
-			if(abilities == null || abilities.getScore(names[i]) == null) {
-				assertFalse("If the ability is null, the viewModel contains null",
+			if(abilities == null || ! abilities.getScore(names[i]).isDefined()) {
+				assertFalse("If the ability is not defined, the viewModel contains null",
 						list.get(i).isScoreNotNull().get());
 			} else {
 				assertEquals("If the ability is not null, the viewModel contains the right value",

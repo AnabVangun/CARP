@@ -1,11 +1,6 @@
 # CARP
 
 ## TODO
-1. Implement transactional modification
-    2. Make creature creation/modification transactional
-        1. Creature is read-only by default
-        2. It becomes read-write when a transaction is open 
-        and some invalid values
 1. Implement direct assignment ability scores generation
     1. Add a user input to choose ability generation method
     2. When selecting direct generation, make ability score editable

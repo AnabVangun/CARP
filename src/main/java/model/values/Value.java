@@ -21,4 +21,12 @@ public class Value {
     public int getValue() {
     	return this.value;
     }
+    
+    /**
+     * Sets the value of the object.
+     * @param value to set.
+     */
+    public void setValue(int value) {
+    	this.value = value;
+    }
 }

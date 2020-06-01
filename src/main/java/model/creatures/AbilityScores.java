@@ -85,7 +85,7 @@ public interface AbilityScores extends Iterable<Map.Entry<AbilityName, AbilitySc
 		}
 		Map<AbilityName, InvalidityCode> result = new EnumMap<>(AbilityName.class);
 		//Check if all mandatory abilities are present
-		if(!MANDATORY_ABILITIES.containsAll(values.keySet())) {
+		if(!values.keySet().containsAll(MANDATORY_ABILITIES)) {
 			//If not, find the missing one and throw an exception
 			for(AbilityName ability: MANDATORY_ABILITIES) {
 				if (!values.containsKey(ability)) {
@@ -171,39 +171,68 @@ class ROAbilityScores implements AbilityScores{
  * directly but only expose its {@link ROAbilityScores} wrapper.
  * @author TLM
  */
-class RWAbilityScores implements AbilityScores{
+class RWAbilityScores implements AbilityScores, CommittablePart<RWAbilityScores>{
 	/**
 	 * Map of the scores associated with the abilities.
 	 */
 	private EnumMap<AbilityName, AbilityScoreType> abilities;
+	private ROAbilityScores roAbilityScores = new ROAbilityScores(this);
+	private boolean isPrepared = false;
 
 	/**
 	 * Initialises an {@link AbilityScores} object.
 	 * @param values	map assigning the base scores to the abilities. May be 
-	 * empty but not null.
-	 * @throws NullPointerException if the input is null.
+	 * empty or null.
 	 */
 	public RWAbilityScores(Map<AbilityName, Integer> values) {
-		if(values == null) {
-			throw new NullPointerException("Cannot instantiate an abilityScores on null input");
-		}
 		this.abilities = new EnumMap<AbilityName, AbilityScoreType>(AbilityName.class);
-		for(Entry<AbilityName, Integer> entry : values.entrySet()) {
-			this.abilities.put(entry.getKey(), new AbilityScoreType(entry.getValue()));
+		for(AbilityName ability: AbilityName.values()) {
+			this.abilities.put(ability, new AbilityScoreType(values == null ? null : values.get(ability)));
 		}
 	}
 	
 	/**
-	 * Throws an {@link java.lang.IllegalArgumentException} describing how 
+	 * Sets the value of a given {@link AbilityScore}.
+	 * @param ability	to set
+	 * @param value		to assign to the ability. May be null.
+	 * @return the reason why the new value is invalid if it is so, or null if 
+	 * it is valid.
+	 * @throws NullPointerException if ability is null.
+	 */
+	public InvalidityCode setAbilityScore(AbilityName ability, Integer value) {
+		if(ability == null) {
+			throw new NullPointerException("Tried to set the value of the null ability");
+		}
+		this.isPrepared = false;
+		if(value == null) {
+			this.abilities.get(ability).nullify();
+			if(MANDATORY_ABILITIES.contains(ability)) {
+				return InvalidityCode.MISSING;
+			} else {
+				return null;
+			}
+		} else {
+			this.abilities.get(ability).setValue(value);
+			if(value < ValueParameters.MIN_ABILITY_SCORE) {
+				return InvalidityCode.TOO_LOW;
+			} else if (value > ValueParameters.MAX_ABILITY_SCORE) {
+				return InvalidityCode.TOO_HIGH;
+			} else {
+				return null;
+			}
+		}
+	}
+	
+	/**
+	 * Throws an {@link java.lang.IllegalStateException} describing how 
 	 * the values are invalid.
 	 * @param invalidity	map of the invalidity reasons. Assumed to be 
 	 * neither null nor empty.
 	 * @param values		map of the values that are invalid.
-	 * @throws IllegalArgumentException
+	 * @throws IllegalStateException
 	 */
-	private void rejectInvalidAbilityScoreInput(Map<AbilityName, InvalidityCode> invalidity, 
-			Map<AbilityName, Integer> values) 
-			throws IllegalArgumentException{
+	private void rejectInvalidAbilityScoreInput(Map<AbilityName, InvalidityCode> invalidity) 
+			throws IllegalStateException{
 		String errorMessage = "Tried to create an invalid AbilityScores object:";
 		for(Map.Entry<AbilityName, InvalidityCode> entry : invalidity.entrySet()) {
 			errorMessage += " " + entry.getKey() + " : " + entry.getValue().getErrorMessage();
@@ -212,14 +241,14 @@ class RWAbilityScores implements AbilityScores{
 				break;
 			case TOO_HIGH:
 			case TOO_LOW:
-				errorMessage += " : " + values.get(entry.getKey());
+				errorMessage += " : " + this.getScore(entry.getKey());
 				break;
 			default:
 				break;
 			}
 			errorMessage += ";";
 		}
-		throw new IllegalArgumentException(errorMessage);
+		throw new IllegalStateException(errorMessage);
 	}
 	
 	/**
@@ -234,15 +263,18 @@ class RWAbilityScores implements AbilityScores{
 		}
 		this.abilities = new EnumMap<AbilityName, AbilityScoreType>(AbilityName.class);
 		for(Map.Entry<AbilityName, AbilityScore> entry : abilities) {
-			if(entry.getValue() != null) {
-				this.abilities.put(entry.getKey(), new AbilityScoreType(entry.getValue()));
+			if(entry.getValue().isDefined()) {
+				this.abilities.put(entry.getKey(), new AbilityScoreType(entry.getValue().getValue()));
+			} else {
+				this.abilities.put(entry.getKey(), new AbilityScoreType(10));
+				this.abilities.get(entry.getKey()).isDefined = false;
 			}
 		}
 	}
 	
 	@Override
 	public int getModifier(AbilityName ability) {
-		return abilities.getOrDefault(ability, AbilityScoreType.UNDEFINED).getModifier();
+		return abilities.get(ability).getModifier();
 	}
 	@Override
 	public AbilityScore getScore(AbilityName ability) {
@@ -253,7 +285,7 @@ class RWAbilityScores implements AbilityScores{
 	 * @return a read-only object encapsulating this one.
 	 */
 	public AbilityScores getROAbilityScores() {
-		return new ROAbilityScores(this);
+		return this.roAbilityScores;
 	}
 
 	/**
@@ -263,37 +295,58 @@ class RWAbilityScores implements AbilityScores{
 	 * @author TLM
 	 */
 	private static class AbilityScoreType extends Value implements AbilityScore{
-		
-		final static AbilityScoreType UNDEFINED = new AbilityScoreType(ValueParameters.MIN_ABILITY_SCORE) {
-			@Override
-			public int getModifier() {
-				return 0;
-			}
-			@Override
-			public int getValue() {
-				throw new UnsupportedOperationException("Tried to call getValue on the UNDEFINED ability score");
-			}
-		};
+		private boolean isDefined = false;
 		/**
 		 * Basic constructor directly derived from {@link Value#Value(int)}.
 		 * @param value
 		 */
-		AbilityScoreType(int value) {
-			super(value);
+		AbilityScoreType(Integer value) {
+			super(value == null ? 10 : value);
+			this.isDefined = value != null;
 		}
 		
 		/**
-		 * Makes a deep copy of the input {@link AbilityScore} object.
-		 * @param value	to copy.
+		 * Basic constructor for an ability score that has not been defined.
 		 */
-		AbilityScoreType(AbilityScore value){
-			//XXX Handle bonuses properly
-			super(value.getValue());
+		AbilityScoreType(){
+			super(10);
+			this.isDefined = false;
 		}
 
 		@Override
 		public int getModifier() {
-			return AbilityScore.computeModifier(this.getValue());
+			if(this.isDefined) {
+				return AbilityScore.computeModifier(this.getValue());
+			} else {
+				return 0;
+			}
+		}
+		
+		@Override
+		public int getValue() {
+			if(this.isDefined) {
+				return super.getValue();
+			} else {
+				throw new UnsupportedOperationException("Tried to call getValue on the UNDEFINED ability score");
+			}
+		}
+
+		@Override
+		public boolean isDefined() {
+			return this.isDefined;
+		}
+		
+		@Override
+		public void setValue(int value) {
+			super.setValue(value);
+			this.isDefined = true;
+		}
+		
+		/**
+		 * Makes the ability score undefined.
+		 */
+		public void nullify() {
+			this.isDefined = false;
 		}
 
 	}
@@ -318,10 +371,35 @@ class RWAbilityScores implements AbilityScores{
 
 	@Override
 	public Map<AbilityName, InvalidityCode> checkValidity() {
-		//TODO test this method
 		return AbilityScores.checkAbilityScoresValidity(
 				//Convert Map<AbilityName, AbilityScores> into Map<AbilityName, Integer>
-				this.abilities.entrySet()
-				.stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getValue())));
+				this.abilities.entrySet().stream()
+				.filter(e -> e.getValue().isDefined) //keep only the defined values
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getValue())));
 	};
+	
+	@Override
+	public void commit(RWAbilityScores toReplace) throws IllegalStateException{
+		if(!this.isPrepared) {
+			throw new IllegalStateException("Tried to commit an unprepared object");
+		}
+		//copy this into toReplace
+		for(AbilityName ability: AbilityName.values()) {
+			if(this.abilities.get(ability).isDefined) {
+				toReplace.setAbilityScore(ability, this.getScore(ability).getValue());
+			} else {
+				toReplace.abilities.get(ability).nullify();
+			}
+		}
+	}
+	
+	@Override
+	public void prepareCommit() throws IllegalStateException{
+		Map<AbilityName, InvalidityCode> errors = this.checkValidity();
+		if(errors.isEmpty()) {
+			this.isPrepared = true;
+		} else {
+			rejectInvalidAbilityScoreInput(errors);
+		}
+	}
 }

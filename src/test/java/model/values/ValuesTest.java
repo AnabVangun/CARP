@@ -22,4 +22,17 @@ public class ValuesTest {
 		assertEquals("Negative values work", -5, new Value(-5).getValue());
 		assertEquals("Positive values work", 13, new Value(13).getValue());
 	}
+	
+	/**
+	 * Checks that {@link Value#setValue()} modifies the value.
+	 */
+	@Test
+	public void testSetValue() {
+		for (int i : new int[] {2, -3, 50}) {
+			v.setValue(i);
+			assertEquals("setValue modifies the value",
+					i,
+					v.getValue());
+		}
+	}
 }

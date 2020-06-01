@@ -20,8 +20,7 @@ public class AbilityScoresViewModel implements SimpleListViewModel<AbilityScoreL
 	public AbilityScoresViewModel(AbilityScores abilities) {
 		List<AbilityScoreListItemViewModel> init = new ArrayList<>();
 		for(AbilityName ability : AbilityName.values()) {
-			init.add(new AbilityScoreListItemViewModel(ability, 
-					abilities != null ? abilities.getScore(ability) : null));
+			init.add(new AbilityScoreListItemViewModel(ability, abilities.getScore(ability)));
 		}
 		abilityList = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(init));
 	}

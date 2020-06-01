@@ -37,9 +37,11 @@ public class AbilityScoreListItemViewModel implements ViewModel {
 	 */
 	private void setAbilityProperties(AbilityScore ability) {
 		this.ability = ability;
-		isNotNull.set(this.ability != null);
+		isNotNull.set(this.ability.isDefined());
 		if(isNotNull.get()) {
 			score.set(String.format("%,d", this.ability.getValue()));
+		} else {
+			score.set("");
 		}
 		modifier.set(String.format("%+,d", isNotNull.get()?ability.getModifier():0));
 	}

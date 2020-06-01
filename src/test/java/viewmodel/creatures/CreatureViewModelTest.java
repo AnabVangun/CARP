@@ -2,13 +2,16 @@ package viewmodel.creatures;
 
 import static org.junit.Assert.*;
 
+import java.util.EnumMap;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import javafx.collections.ObservableList;
-import model.creatures.AbilityScores;
 import model.creatures.AbilityScoresTest;
 import model.creatures.Creature;
+import model.creatures.CreatureParameters.AbilityName;
+import model.creatures.CreatureTest;
 
 public class CreatureViewModelTest {
 	Creature creature;
@@ -16,8 +19,7 @@ public class CreatureViewModelTest {
 
 	@Before
 	public void setUp() throws Exception {
-		creature = new Creature();
-		creature.setAbilityScores(AbilityScores.create(AbilityScoresTest.basicAbilityScores()));
+		creature = CreatureTest.basicCreature();
 		viewModel = new CreatureViewModel(creature);
 	}
 
@@ -68,14 +70,22 @@ public class CreatureViewModelTest {
 		assertTrue("A not started creature is in edit mode", 
 				viewModel.isInEditMode().get());
 		testIsInEditModeHelper(Creature.InitStatus.ABILITIES);
-		creature.setAbilityScores(AbilityScores.create(AbilityScoresTest.basicAbilityScores()));
+		EnumMap<AbilityName, Integer> abilities = AbilityScoresTest.basicAbilityScores();
+		for(AbilityName ability : abilities.keySet()) {
+			creature.setAbilityScore(ability, abilities.get(ability));
+		}
 		viewModel.refresh();
-		assertTrue("A creature with just ability scores is in edit mode",
+		assertTrue("A creature with just ability scores not validated is in edit mode",
 				viewModel.isInEditMode().get());
-		testIsInEditModeHelper(Creature.InitStatus.REVIEW);//FIXME this fails because the viewmodel is not refreshed
-		creature.finish();
+		testIsInEditModeHelper(Creature.InitStatus.ABILITIES);
+		if(!creature.validateInitStep()) {
+			fail("Something wrong happened, the basic ability scores should be valid");
+		}
 		viewModel.refresh();
-		assertFalse("A completed creature is not in edit mode",
+		testIsInEditModeHelper(Creature.InitStatus.REVIEW);
+		creature.commit();
+		viewModel.refresh();
+		assertFalse("A committed creature is not in edit mode",
 				viewModel.isInEditMode().get());
 		testIsInEditModeHelper(Creature.InitStatus.COMPLETED);
 	}

@@ -42,9 +42,10 @@ public class AbilityScoresTest {
 	/**
 	 * Checks that the input function 
 	 * accepts a map with valid parameters (abilities with 
-	 * valid values: all, some or none) and rejects a
+	 * valid values: all, some or none) 
+	 * Do not verify that it rejects a
 	 * map with invalid values (some 
-	 * abilities with invalid values) and null.
+	 * abilities with invalid values) and null anymore.
 	 * Additional test: changing the input map to the constructor does not
 	 * affect the object.
 	 * Also checks the {@link 
@@ -76,8 +77,8 @@ public class AbilityScoresTest {
 				assertEquals("The constructor must not modify the valid values", 
 						abilities.get(ability).intValue(), test.getScore(ability).getValue());
 			} else {
-				assertNull("getScore must return null for the unspecified values",
-						test.getScore(ability));
+				assertFalse("getScore must return an undefined abilityScore for the unspecified values",
+						test.getScore(ability).isDefined());
 			}
 		}
 		//changing the input map after instantiation does not affect the object
@@ -89,8 +90,8 @@ public class AbilityScoresTest {
 				assertEquals("The constructor should make a deep copy of the input map", 
 						abilities.get(ability) - 1, test.getScore(ability).getValue());
 			} else {
-				assertNull("getScore must return null for the unspecified model.values",
-						test.getScore(ability));
+				assertFalse("getScore must return an undefined abilityScore for the unspecified values",
+						test.getScore(ability).isDefined());
 			}
 		}
 		/*
@@ -108,9 +109,11 @@ public class AbilityScoresTest {
 //			}
 //		}
 		//KO case: null input
-		try {
-			function.apply((Map<CreatureParameters.AbilityName,Integer>) null);
-		} catch (NullPointerException e) {};
+		//Null input do not raise exceptions anymore
+//		try {
+//			function.apply((Map<CreatureParameters.AbilityName,Integer>) null);
+//			fail("An exception should be raised");
+//		} catch (NullPointerException e) {};
 	}
 
 	/**
@@ -331,6 +334,7 @@ public class AbilityScoresTest {
 							abilities.put(toModify, ValueParameters.MIN_ABILITY_SCORE - (i+1));
 							result.put(toModify, InvalidityCode.TOO_LOW);
 						}
+						i++;
 					}
 				};
 		/*
@@ -350,6 +354,7 @@ public class AbilityScoresTest {
 							abilities.put(toModify, ValueParameters.MAX_ABILITY_SCORE + (i+1));
 							result.put(toModify, InvalidityCode.TOO_HIGH);
 						}
+						i++;
 					}
 				};
 		/*
@@ -392,5 +397,120 @@ public class AbilityScoresTest {
 		});
 		//Case 7: nothing wrong
 		performTest.accept((abilities, result) -> {});
+	}
+	
+	/**
+	 * Checks that:
+	 * 1. {@link RWAbilityScores#setAbilityScore(AbilityName, Integer)} can set
+	 * valid and invalid values, with a consistent error code returned.
+	 * 2. The associated {@link ROAbilityScores} is modified as well.
+	 */
+	@Test
+	public void testSetAbility() {
+		RWAbilityScores abilities = new RWAbilityScores((Map<AbilityName, Integer>) null);
+		AbilityScores roAbilities = abilities.getROAbilityScores();
+		//Test a valid set
+		AbilityName name = AbilityName.STRENGTH;
+		Integer value = 10;
+		EnumMap<AbilityName, Integer> expected = new EnumMap<AbilityName, Integer>(AbilityName.class);
+		expected.put(name, value);
+		assertNull("A valid setAbility must return null",
+				abilities.setAbilityScore(name, expected.get(name)));
+		//Test invalid sets
+		name = AbilityName.DEXTERITY;
+		value = ValueParameters.MIN_ABILITY_SCORE - 2;
+		expected.put(name, value);
+		assertEquals("A too low value must return " + InvalidityCode.TOO_LOW,
+				InvalidityCode.TOO_LOW,
+				abilities.setAbilityScore(name, expected.get(name)));
+		name = AbilityName.CHARISMA;
+		if(!AbilityScores.MANDATORY_ABILITIES.contains(name)) {
+			fail("This test assumes that " + name + " is mandatory, which is false.");
+		}
+		expected.put(name, null);
+		assertEquals("A null value on a mandatory ability must return " + InvalidityCode.MISSING,
+				InvalidityCode.MISSING,
+				abilities.setAbilityScore(name, expected.get(name)));
+		name = AbilityName.CONSTITUTION;
+		expected.put(name, ValueParameters.MAX_ABILITY_SCORE + 20);
+		assertEquals("A too high value must return " + InvalidityCode.TOO_HIGH,
+				InvalidityCode.TOO_HIGH,
+				abilities.setAbilityScore(name, expected.get(name)));
+		//Check that the abilityScores is modified
+		for(AbilityName ability: AbilityName.values()) {
+			assertEquals("All abilities must be equal to what was set",
+					expected.get(ability),
+					abilities.getScore(ability).isDefined() == false ? null :
+						abilities.getScore(ability).getValue());
+			assertEquals("The read-only property must follow the read-write one",
+					expected.get(ability),
+					roAbilities.getScore(ability).isDefined() == false ? null :
+						roAbilities.getScore(ability).getValue());
+		}
+	}
+	
+	/**
+	 * Checks that:
+	 * 1. commit before prepareCommit fails
+	 * 2. prepareCommit fails if invalid values are present
+	 * 3. prepareCommit if the object is valid
+	 * 4. commit fails if a modification was made after the last prepareCommit
+	 * 5. commit succeeds if prepareCommit has succeeded
+	 */
+	@Test
+	public void testCommit() {
+		RWAbilityScores committedScores = new RWAbilityScores(basicAbilityScores());
+		RWAbilityScores replacedScores = new RWAbilityScores((Map<AbilityName, Integer>) null);
+		if(!committedScores.checkValidity().isEmpty()) {
+			fail("This test assumes that basicAbilityScores initialises a valid set of scores");
+		}
+		try {
+			committedScores.commit(replacedScores);
+			fail("A commit before a prepareCommit should fail");
+		} catch (IllegalStateException e) {}
+		//Check for different types of invalidity that all fail
+		try {
+			replacedScores.prepareCommit();
+			fail("An invalid abilityScores should fail to prepare");
+		} catch (IllegalStateException e) {};
+		//Add missing abilities, set invalid values
+		int i = 0;
+		for(AbilityName ability : AbilityName.values()) {
+			int value;
+			if(AbilityScores.MANDATORY_ABILITIES.contains(ability)) {
+				value = 10;
+			} else {
+				value = (i % 2 == 0 
+						? ValueParameters.MIN_ABILITY_SCORE - i - 1 
+						: ValueParameters.MAX_ABILITY_SCORE + i);
+				i++;
+			}
+			replacedScores.setAbilityScore(ability, value);
+		}
+		try {
+			replacedScores.prepareCommit();
+			fail("An invalid abilityScores should fail to prepare");
+		} catch (IllegalStateException e) {};
+		//Verify that if a modification occurs between prepare and commit, commit fails
+		committedScores.prepareCommit();
+		committedScores.setAbilityScore(AbilityName.STRENGTH, 2);
+		try {
+			committedScores.commit(replacedScores);
+			fail("A commit before a prepareCommit should fail");
+		} catch (IllegalStateException e) {}
+		//Check that prepare commit succeeds on valid scores
+		committedScores.prepareCommit();
+		committedScores.commit(replacedScores);
+		//Verify that commit has succeeded
+		for(AbilityName ability: AbilityName.values()) {
+			assertEquals("After a commit, the replaced object must be equal to the committed one",
+					committedScores.getScore(ability).isDefined(), 
+					replacedScores.getScore(ability).isDefined());
+			if(committedScores.getScore(ability).isDefined()) {
+				assertEquals("After a commit, the replaced object must be equal to the committed one",
+						committedScores.getScore(ability).getValue(),
+						replacedScores.getScore(ability).getValue());
+			}
+		}
 	}
 }

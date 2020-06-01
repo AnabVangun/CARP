@@ -33,8 +33,9 @@ public class AbilityScoreListItemViewModelTest {
 		for(Map.Entry<AbilityName, AbilityScore> entry: abilities) {
 			viewModels.put(entry.getKey(), new AbilityScoreListItemViewModel(entry.getKey(), entry.getValue()));
 		}
+		AbilityScores nullAbilities = AbilityScores.create(null);
 		nullAbilityName = AbilityName.STRENGTH;
-		nullViewModel = new AbilityScoreListItemViewModel(nullAbilityName, null);
+		nullViewModel = new AbilityScoreListItemViewModel(nullAbilityName, nullAbilities.getScore(nullAbilityName));
 	}
 
 	/**

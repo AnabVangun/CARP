@@ -54,7 +54,7 @@ public class CreatureViewModel implements ViewModel{
 	 */
 	public void refresh() {
 		this.abilities.set(new AbilityScoresViewModel(creature.getAbilityScores()));
-		this.isEditing.set(!creature.isInitialised());
+		this.isEditing.set(creature.isEditable());
 		this.currentPhaseIndex.set(creature.getInitialisationStatus().ordinal());
 	}
 	
@@ -66,12 +66,5 @@ public class CreatureViewModel implements ViewModel{
 	 */
 	public ObservableIntegerValue getCurrentEditionPhase() {
 		return currentPhaseIndex.getReadOnlyProperty();
-	}
-	
-	//TODO delete after test
-	@Deprecated
-	public void changeCreature() {
-		creature.finish();
-		refresh();
 	}
 }
