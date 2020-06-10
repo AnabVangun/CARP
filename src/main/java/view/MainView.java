@@ -18,9 +18,7 @@ public class MainView implements Initializable, FxmlView<MainViewModel> {
 	MainViewModel viewModel;
 
 	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-		// TODO Auto-generated method stub
-	}
+	public void initialize(URL location, ResourceBundle resources) {}
 	
 	/**
 	 * Method called when the File > New > Creature button is pressed.

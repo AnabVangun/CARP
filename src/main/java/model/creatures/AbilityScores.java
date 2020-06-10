@@ -116,7 +116,7 @@ public interface AbilityScores extends Iterable<Map.Entry<AbilityName, AbilitySc
 	/**
 	 * Initialises an AbilityScores object.
 	 * @param values	map assigning the base scores to the abilities. May be 
-	 * empty but not null.
+	 * empty or null.
 	 */
 	public static AbilityScores create(Map<AbilityName, Integer> values) {
 		return new RWAbilityScores(values);
@@ -347,6 +347,36 @@ class RWAbilityScores implements AbilityScores, CommittablePart<RWAbilityScores>
 		 */
 		public void nullify() {
 			this.isDefined = false;
+		}
+
+		@Override
+		public int compareTo(AbilityScore o) {
+			//Undefined is worse than anything except undefined
+			if(!this.isDefined()) {
+				return o.isDefined() ? -1 : 0;
+			} else if (!o.isDefined()) {
+				return 1;
+			}
+			return this.getValue() - o.getValue();
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			//Undefined only equals undefined
+			return (o instanceof AbilityScore &&
+					this.isDefined() == ((AbilityScore) o).isDefined() &&
+					(!this.isDefined() ||
+							(this.isDefined() && this.getValue() == ((AbilityScore) o).getValue()))
+					);
+		}
+		
+		@Override
+		public int hashCode() {
+			if(this.isDefined()) {
+				return ((Integer) this.getValue()).hashCode();
+			} else {
+				return ((Boolean) false).hashCode();
+			}
 		}
 
 	}

@@ -17,10 +17,15 @@ import model.creatures.CreatureParameters.AbilityName;
 public class AbilityScoresViewModel implements SimpleListViewModel<AbilityScoreListItemViewModel> {
 	private ReadOnlyListWrapper<AbilityScoreListItemViewModel> abilityList;
 	
-	public AbilityScoresViewModel(AbilityScores abilities) {
+	public AbilityScoresViewModel(AbilityScores abilities, AbilityScores tmpAbilities) {
+		if(abilities == null || tmpAbilities == null) {
+			throw new NullPointerException("Cannot instantiate an AbilityScoresViewModel on null abilities");
+		}
 		List<AbilityScoreListItemViewModel> init = new ArrayList<>();
 		for(AbilityName ability : AbilityName.values()) {
-			init.add(new AbilityScoreListItemViewModel(ability, abilities.getScore(ability)));
+			init.add(new AbilityScoreListItemViewModel(ability, 
+					abilities.getScore(ability),
+					tmpAbilities.getScore(ability)));
 		}
 		abilityList = new ReadOnlyListWrapper<>(FXCollections.observableArrayList(init));
 	}

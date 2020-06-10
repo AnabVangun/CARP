@@ -42,20 +42,15 @@ public class CreatureViewModelTest {
 	public void testGetAbilities() {
 		ObservableList<AbilityScoreListItemViewModel> actualAbilities = viewModel.getAbilities().get().getListItems();
 		ObservableList<AbilityScoreListItemViewModel> expectedAbilities = 
-				new AbilityScoresViewModel(creature.getAbilityScores())
+				new AbilityScoresViewModel(creature.getAbilityScores(), creature.getTempAbilityScores())
 				.getListItems();
 		assertEquals("The lists must be equal, so their length must match",
 				expectedAbilities.size(),
 				actualAbilities.size());
 		for(int i = 0; i < expectedAbilities.size(); i++) {
-			assertEquals("The scores must be equal: if one is null, so is the other",
-					expectedAbilities.get(i).isScoreNotNull().get(), 
-					actualAbilities.get(i).isScoreNotNull().get());
-			if(expectedAbilities.get(i).isScoreNotNull().get()) {
 				assertEquals("The scores must be equal",
 						expectedAbilities.get(i).getAbilityScore().get(),
 						actualAbilities.get(i).getAbilityScore().get());
-			}
 		}
 	}
 

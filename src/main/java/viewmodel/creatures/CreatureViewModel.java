@@ -8,6 +8,7 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableObjectValue;
 import model.creatures.Creature;
+import model.creatures.CreatureParameters.AbilityName;
 
 /**
  * View model used to display a {@link Creature} object.
@@ -30,6 +31,7 @@ public class CreatureViewModel implements ViewModel{
 			throw new NullPointerException("Tried to initialise a CreatureViewModel on a null creature");
 		}
 		this.creature = creature;
+		this.abilities.set(new AbilityScoresViewModel(creature.getAbilityScores(), creature.getTempAbilityScores()));
 		this.refresh();
 	}
 	
@@ -53,7 +55,12 @@ public class CreatureViewModel implements ViewModel{
 	 * is modified from outside of this object.
 	 */
 	public void refresh() {
-		this.abilities.set(new AbilityScoresViewModel(creature.getAbilityScores()));
+		//Refresh tmpAbilityScore of the ability score list items
+		for(AbilityScoreListItemViewModel item : this.abilities.get().getListItems()) {
+			//settTmpAbility is supposed to refresh the object
+			item.setTmpAbility(this.creature.getTempAbilityScores().getScore(
+					AbilityName.valueOf(item.getAbilityName())));
+		}
 		this.isEditing.set(creature.isEditable());
 		this.currentPhaseIndex.set(creature.getInitialisationStatus().ordinal());
 	}

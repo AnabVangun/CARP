@@ -25,9 +25,10 @@ public class AbilityScoresTest {
 	/**
 	 * Checks that the {@link AbilityScores}
 	 * constructor accepts a map with valid parameters (abilities with 
-	 * valid values: all, some or none) and rejects a
+	 * valid values: all, some or none).
+	 * Do not verify that it rejects a
 	 * map with invalid values (some 
-	 * abilities with invalid values) and null.
+	 * abilities with invalid values) and null anymore.
 	 * Additional test: changing the input map to the constructor does not
 	 * affect the object.
 	 * Also checks the {@link 
@@ -272,8 +273,7 @@ public class AbilityScoresTest {
 	}
 
 	/**
-	 * @return a map with a different value for each ability score, starting 
-	 * at 10.
+	 * @return a map with a different value for each ability score.
 	 */
 	public static EnumMap<AbilityName, Integer> basicAbilityScores() {
 		EnumMap<AbilityName, Integer> abilities = 
@@ -511,6 +511,43 @@ public class AbilityScoresTest {
 						committedScores.getScore(ability).getValue(),
 						replacedScores.getScore(ability).getValue());
 			}
+		}
+	}
+	/**
+	 * Checks that compareTo between two ability scores contained by an 
+	 * AbilityScores object is consistent with natural ordering and that 
+	 * undefined value are worse than any other value.
+	 */
+	@Test
+	public void testCompareTo() {
+		BiConsumer<Integer, Integer> assertSameSign = (a, b) -> {
+			assertTrue(a + " and " + b + " should have the same sign",
+					(a == 0 && b == 0) ||
+					(a < 0 && b < 0) ||
+					(a > 0 && b > 0)
+					);
+		};
+		AbilityScores abilities = AbilityScores.create(AbilityScoresTest.basicAbilityScores());
+		for (AbilityName ability1 : AbilityName.values()) {
+			for (AbilityName ability2 : AbilityName.values()) {
+				//Compare ability is consistent with compare value of ability
+				assertSameSign.accept(abilities.getScore(ability1)
+						.compareTo(abilities.getScore(ability2)),
+						((Integer) abilities.getScore(ability1).getValue())
+						.compareTo(abilities.getScore(ability2).getValue()));
+				//Compare ability is asymetric
+				assertSameSign.accept(abilities.getScore(ability1)
+						.compareTo(abilities.getScore(ability2)),
+						-abilities.getScore(ability2)
+						.compareTo(abilities.getScore(ability1)));
+			}
+			AbilityScores nullAbility = AbilityScores.create(null);
+			int comparison = abilities.getScore(ability1)
+					.compareTo(nullAbility.getScore(ability1));
+			assertTrue(comparison + " must be greater than zero", comparison > 0);
+			comparison = nullAbility.getScore(ability1)
+					.compareTo(abilities.getScore(ability1));
+			assertTrue(comparison + " must be less than zero", comparison < 0);
 		}
 	}
 }

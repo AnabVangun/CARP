@@ -8,7 +8,7 @@ package model.values;
  * Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma.
  * @author TLM
  */
-public interface AbilityScore {
+public interface AbilityScore extends Comparable<AbilityScore>{
 	
 	/**
 	 * @return the modifier of the ability score. There is no need to check if

@@ -11,12 +11,18 @@ import javafx.collections.ObservableList;
 import model.creatures.AbilityScores;
 import model.creatures.AbilityScoresTest;
 import model.creatures.CreatureParameters.AbilityName;
+import viewmodel.creatures.CreatureViewModelParameters.Modification;
 
 public class AbilityScoresViewModelTest {
 	private AbilityScores abilities;
 	private AbilityScoresViewModel viewModel;
 	/** ViewModel used to verify that a null input behaves as expected */
 	private AbilityScoresViewModel nullVM;
+	/** 
+	 * ViewModel used to verify that abilities and temporary abilities are 
+	 * properly set. 
+	 * */
+	private AbilityScoresViewModel nullifiedVM;
 
 	@Before
 	public void setUp() throws Exception {
@@ -29,8 +35,11 @@ public class AbilityScoresViewModelTest {
 			}
 		}
 		abilities = AbilityScores.create(map);
-		viewModel = new AbilityScoresViewModel(abilities);
-		nullVM = new AbilityScoresViewModel(AbilityScores.create(null));
+		viewModel = new AbilityScoresViewModel(abilities, 
+				AbilityScores.create(AbilityScoresTest.basicAbilityScores()));
+		nullVM = new AbilityScoresViewModel(AbilityScores.create(null), AbilityScores.create(null));
+		nullifiedVM = new AbilityScoresViewModel(AbilityScores.create(AbilityScoresTest.basicAbilityScores()),
+				AbilityScores.create(null));
 	}
 
 	/**
@@ -40,19 +49,26 @@ public class AbilityScoresViewModelTest {
 	 */
 	@Test
 	public void testGetAbilityList() {
-		testGetAbilityListHelper(abilities, viewModel);
-		testGetAbilityListHelper(null, nullVM);
+		testGetAbilityListHelper(AbilityScores.create(AbilityScoresTest.basicAbilityScores()), viewModel);
+		testGetAbilityListHelper(AbilityScores.create(null), nullVM);
+		testGetAbilityListHelper(AbilityScores.create(null), nullifiedVM);
+		for(AbilityScoreListItemViewModel vm : nullifiedVM.getListItems()) {
+			assertEquals("All scores should be nullified when the tmp abilities are null and the abilities not",
+					Modification.NULLIFY.name(), 
+					vm.getScoreStyleClasses().get(0));
+		}
 	}
 	
 	/**
 	 * Checks that the input viewModel returns an ability list with all 
-	 * abilities, even if some actually have null values. The ability names 
+	 * abilities, even if some actually have non-defined values. The ability 
+	 * names 
 	 * must be in the proper order, the ability score must be the one given 
 	 * as the constructor input.
-	 * @param abilities may be null to test a viewModel initialised with null
+	 * @param tmpAbilities
 	 * @param viewModel
 	 */
-	private void testGetAbilityListHelper(AbilityScores abilities, AbilityScoresViewModel viewModel) {
+	private void testGetAbilityListHelper(AbilityScores tmpAbilities, AbilityScoresViewModel viewModel) {
 		AbilityName[] names = AbilityName.values();
 		ObservableList<AbilityScoreListItemViewModel> list = viewModel.getListItems();
 		assertEquals("The observable list must contain as many items as ability names",
@@ -64,12 +80,13 @@ public class AbilityScoresViewModelTest {
 			 * Check ability score. Ignore ability modifier, the
 			 * viewmodel is trusted to be self-consistent.
 			 */
-			if(abilities == null || ! abilities.getScore(names[i]).isDefined()) {
-				assertFalse("If the ability is not defined, the viewModel contains null",
-						list.get(i).isScoreNotNull().get());
+			if(! tmpAbilities.getScore(names[i]).isDefined()) {
+				assertEquals("If the ability is not defined, the viewModel contains null",
+						"",
+						list.get(i).getAbilityScore().get());
 			} else {
 				assertEquals("If the ability is not null, the viewModel contains the right value",
-						abilities.getScore(names[i]).getValue(),
+						tmpAbilities.getScore(names[i]).getValue(),
 						Integer.parseInt(list.get(i).getAbilityScore().get()));
 			}
 		}

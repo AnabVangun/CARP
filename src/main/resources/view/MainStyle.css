@@ -7,3 +7,17 @@
 	-fx-font-weight: bold;
 	-fx-text-fill: red;
 }
+
+.BETTER {
+	-fx-text-fill: green;
+}
+
+.NONE {}
+
+.WORSE {
+	-fx-text-fill: red;
+}
+
+.NULLIFY {
+	-fx-text-fill: blue;
+}

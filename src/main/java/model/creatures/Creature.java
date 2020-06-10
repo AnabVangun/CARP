@@ -114,7 +114,7 @@ public class Creature {
 		 * object are implemented.
 		 */
 		this.tmpAbilities.commit(this.abilities);
-		this.tmpAbilities = null;
+		this.tmpAbilities = this.abilities;
 		this.initStatus = InitStatus.COMPLETED;
 	}
 	
