@@ -64,14 +64,24 @@ public class EditionBarViewModelTest {
 	public void testGetStatus() {
 		for (int i = 0; i < Creature.EDITION_STATUSES.size(); i++) {
 			phase.set(i);
-			for(int j = 0; j < viewModel.getListItems().size(); j++) {
-				EditionBarItemViewModel.Status expectedStatus =
-						j == i ? EditionBarItemViewModel.Status.CURRENT_PHASE : EditionBarItemViewModel.Status.NULL;
-				assertEquals("Only the corresponding item must and can correspond to the current phase",
-						expectedStatus.style,
-						viewModel.getListItems().get(j).getStatusStyle().get());
-			}
+			testGetStatusHelper(i, viewModel);
 		}
 	}
 
+	/**
+	 * Checks that {@link EditionBarItemViewModel#getStatus()} returns 
+	 * {@link EditionBarItemViewModel.Status#CURRENT_PHASE} if and only if the
+	 * object has the same index as the phase.
+	 * @param phase	in which the {@link EditionBarViewModel} is supposed to be.
+	 * @param vm	view model to check.
+	 */
+	protected static void testGetStatusHelper(int phase, EditionBarViewModel vm) {
+		for(int j = 0; j < vm.getListItems().size(); j++) {
+			EditionBarItemViewModel.Status expectedStatus =
+					j == phase ? EditionBarItemViewModel.Status.CURRENT_PHASE : EditionBarItemViewModel.Status.NULL;
+			assertEquals("Only the corresponding item must and can correspond to the current phase",
+					expectedStatus.style,
+					vm.getListItems().get(j).getStatusStyle().get());
+		}
+	}
 }
