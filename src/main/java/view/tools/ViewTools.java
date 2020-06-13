@@ -6,6 +6,8 @@ import de.saxsys.mvvmfx.FluentViewLoader;
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.ViewModel;
 import de.saxsys.mvvmfx.utils.viewlist.CachedViewModelCellFactory;
+import javafx.beans.binding.ListBinding;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ListView;
 
@@ -37,5 +39,26 @@ public final class ViewTools {
 				.viewModel((E) vm)
 				.resourceBundle(resources)
 				.load()));
+	}
+	/**
+	 * Set the text labels in the given {@link ListView} using the provided
+	 * internationalised resources.
+	 * @param listView	to update.
+	 * @param data		to set in the listView. Must correspond to the keys to
+	 * fetch in the resource bundle.
+	 * @param resources	in which the internationalised text is kept.
+	 */
+	public static void setI18nListItems(ListView<String> listView, 
+			ObservableList<String> data,
+			ResourceBundle resources) {
+		listView.setItems(new ListBinding<String>() {
+			{super.bind(data);}
+			@Override
+			protected ObservableList<String> computeValue() {
+				return FXCollections.observableArrayList((data.stream()
+				.map(value -> resources.getString(value))
+				.toArray(String[]::new)));
+			}
+		});
 	}
 }

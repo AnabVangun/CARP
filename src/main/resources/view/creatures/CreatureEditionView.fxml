@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
@@ -13,5 +14,15 @@
             <Text fx:id="phaseDescription" strokeType="OUTSIDE" strokeWidth="0.0" text="Description of the phase" />
          </children>
       </TextFlow>
+      <HBox fx:id="methodChoiceContainer">
+         <children>
+            <ListView fx:id="methodChoice" prefHeight="200.0" prefWidth="200.0" />
+            <TextFlow prefHeight="200.0" prefWidth="200.0">
+               <children>
+                  <Text fx:id="methodDescription" strokeType="OUTSIDE" strokeWidth="0.0" text="Description of the method" />
+               </children>
+            </TextFlow>
+         </children>
+      </HBox>
    </children>
 </VBox>

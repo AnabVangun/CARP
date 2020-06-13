@@ -6,7 +6,6 @@ import java.util.ResourceBundle;
 import de.saxsys.mvvmfx.FluentViewLoader;
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
-import de.saxsys.mvvmfx.utils.viewlist.CachedViewModelCellFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -16,7 +15,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import view.tools.ViewTools;
 import viewmodel.creatures.AbilityScoreListItemViewModel;
-import viewmodel.creatures.AbilityScoresViewModel;
 import viewmodel.creatures.CreatureEditionViewModel;
 import viewmodel.creatures.CreatureViewModel;
 
