@@ -8,6 +8,6 @@
    <children>
       <Label fx:id="abilityLabel" prefHeight="52.0" prefWidth="110.0" text="AbilityName" />
       <TextField fx:id="abilityScoreField" editable="false" />
-      <TextField fx:id="abilityModifierField" editable="false" />
+      <Label fx:id="abilityModifierField" />
    </children>
 </HBox>

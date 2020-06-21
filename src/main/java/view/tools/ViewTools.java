@@ -1,7 +1,6 @@
 package view.tools;
 
 import java.util.ResourceBundle;
-
 import de.saxsys.mvvmfx.FluentViewLoader;
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.ViewModel;
@@ -17,6 +16,12 @@ import javafx.scene.control.ListView;
  *
  */
 public final class ViewTools {
+	/** Path to the bundle containing the creature resources. */
+	public final static String CREATURE_BUNDLE_PATH = "bundles.creature.creatureBundle";
+	/** Path to the bundle containing the input prompt resources. */
+	public final static String INPUT_BUNDLE_PATH = "bundles.menu.inputBundle";
+	/** Path to the bundle containing the creature edition resources. */
+	public final static String CREATURE_EDITION_BUNDLE_PATH = "bundles.creature.CreatureEditionBundle";
 	private ViewTools() {}
 	
 	/**
@@ -41,7 +46,7 @@ public final class ViewTools {
 				.load()));
 	}
 	/**
-	 * Set the text labels in the given {@link ListView} using the provided
+	 * Sets the text labels in the given {@link ListView} using the provided
 	 * internationalised resources.
 	 * @param listView	to update.
 	 * @param data		to set in the listView. Must correspond to the keys to

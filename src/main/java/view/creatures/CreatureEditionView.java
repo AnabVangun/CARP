@@ -5,16 +5,17 @@ import java.util.ResourceBundle;
 
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
-import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.beans.value.WeakChangeListener;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.WeakInvalidationListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import view.creatures.CreatureView.CreaturePart;
 import view.tools.ViewTools;
 import viewmodel.creatures.CreatureEditionViewModel;
 import viewmodel.creatures.EditionBarItemViewModel;
@@ -22,20 +23,38 @@ import viewmodel.creatures.EditionBarViewModel;
 
 public class CreatureEditionView implements Initializable, FxmlView<CreatureEditionViewModel> {
 	@FXML
-	VBox root;
+	private VBox root;
 	@FXML
-	ListView<EditionBarItemViewModel> phaseBar;
+	private ListView<EditionBarItemViewModel> phaseBar;
 	@FXML
-	Text phaseDescription;
+	private Text phaseDescription;
 	@FXML
-	HBox methodChoiceContainer;
+	private HBox methodChoiceContainer;
 	@FXML
-	ListView<String> methodChoice;
+	private ListView<String> methodChoice;
 	@FXML
-	Text methodDescription;
+	private Text methodDescription;
+	@FXML
+	private HBox methodActionContainer;
+	@FXML
+	private AnchorPane creaturePartCopy;
 	@InjectViewModel
-	CreatureEditionViewModel vm;
-	ChangeListener<String> phaseListener;
+	private CreatureEditionViewModel vm;
+	/** Listener reacting to changes in the current phase. */
+	private InvalidationListener phaseListener;
+	/** Listener reacting to changes in the current selected method. */
+	private InvalidationListener methodListener;
+	/** View of the creature being edited. */
+	private final CreatureView creatureView;
+	
+	/**
+	 * Initialises a {@link CreatureEditionView} to handle the edition of a 
+	 * creature.
+	 * @param creatureView displaying the creature to edit.
+	 */
+	protected CreatureEditionView(CreatureView creatureView) {
+		this.creatureView = creatureView;
+	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -45,19 +64,18 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 				EditionBarItemView.class, resources);
 		//Set elements related to phase
 		refreshPhase(resources);
-		phaseListener = (ObservableValue<? extends String> observable, String oldValue, String newValue)
-				-> refreshPhase(resources);
-		vm.getCurrentPhaseDescriptionKey().addListener(new WeakChangeListener<String>(phaseListener));
+		phaseListener = (Observable observable) -> refreshPhase(resources);
+		vm.getCurrentPhaseDescriptionKey().addListener(new WeakInvalidationListener(phaseListener));
 		//Set elements related to method description
-		methodDescription.textProperty().bind(Bindings.createStringBinding(
-				() -> resources.getString(vm.getMethodDescriptionKeys()
-						.get(methodChoice.getFocusModel().focusedIndexProperty().get())), 
-				vm.getMethodDescriptionKeys(),
-				methodChoice.getFocusModel().focusedIndexProperty()));
+		vm.getSelectedMethodIndex().bind(methodChoice.getFocusModel().focusedIndexProperty());
+		refreshMethod(resources);
+		methodListener = (Observable observable) -> refreshMethod(resources);
+		methodChoice.getFocusModel().focusedIndexProperty().addListener(
+				new WeakInvalidationListener(methodListener));
 	}
 
 	/**
-	 * Refreshes all parts of the elements based on the current phase.
+	 * Refreshes all parts of the view based on the current phase.
 	 * @param resources	from which to get internationalised text.
 	 */
 	private void refreshPhase(ResourceBundle resources) {
@@ -68,6 +86,26 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 		methodChoiceContainer.setVisible(vm.hasSeveralMethods().get());
 		ViewTools.setI18nListItems(methodChoice, vm.getMethodNameKeys(), resources);
 		methodChoice.getSelectionModel().clearAndSelect(2);//XXX 2 temporary waiting for STANDARD to be implemented
+		//Set the copy of the CreatureView being edited
+		switch(vm.currentPhaseIndex.get()) {
+		case 0:
+			creaturePartCopy.getChildren().setAll(creatureView.getCreaturePart(CreaturePart.ABILITIES));
+			break;
+		default:
+			creaturePartCopy.getChildren().clear();
+		}
+	}
+	
+	/**
+	 * Refreshes all parts of the view based on the current selected method.
+	 * @param resources	from which to get internationalised text.
+	 */
+	private void refreshMethod(ResourceBundle resources) {
+		methodActionContainer.setManaged(vm.isActionExpected().get());
+		methodActionContainer.setVisible(vm.isActionExpected().get());
+		if(vm.isActionExpected().get()) {
+			methodDescription.setText(resources.getString(vm.getMethodDescriptionKey().getValue()));
+		}
 	}
 
 }

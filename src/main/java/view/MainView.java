@@ -10,10 +10,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.AnchorPane;
 import view.creatures.CreatureView;
+import view.tools.ViewTools;
 import viewmodel.MainViewModel;
 
 public class MainView implements Initializable, FxmlView<MainViewModel> {
-	private String creatureBundleName = "bundles.creature.creatureBundle";
 	@FXML
 	AnchorPane mainPane;
 	
@@ -31,7 +31,8 @@ public class MainView implements Initializable, FxmlView<MainViewModel> {
 		mainPane.getChildren().add(
 				FluentViewLoader.fxmlView(CreatureView.class)
 				.viewModel(viewModel.newCreature())
-				.resourceBundle(ResourceBundle.getBundle(creatureBundleName))
+				.resourceBundle(ResourceBundle.getBundle(ViewTools.INPUT_BUNDLE_PATH))
+				.resourceBundle(ResourceBundle.getBundle(ViewTools.CREATURE_BUNDLE_PATH))
 				.load().getView());
 	}
 

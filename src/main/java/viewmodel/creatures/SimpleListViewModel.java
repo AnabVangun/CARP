@@ -4,9 +4,8 @@ import de.saxsys.mvvmfx.ViewModel;
 import javafx.collections.ObservableList;
 
 /**
- * Interface offering methods to be used by a 
- * {@link view.creatures.SimpleListView} to collect data from its viewModel to
- * display the content of the list.
+ * Interface defining methods to expose a list of data to display to a view for
+ * viewModels whose main purpose is to prepare such data.
  * @author TLM
  *
  * @param <E> the viewModel of the elements of the list.

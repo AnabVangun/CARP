@@ -8,21 +8,23 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableIntegerValue;
 import javafx.beans.value.ObservableObjectValue;
 import model.creatures.Creature;
-import model.creatures.CreatureParameters.AbilityName;
 
 /**
  * View model used to display a {@link Creature} object.
  * @author TLM
  */
 public class CreatureViewModel implements ViewModel{
-	//TODO add interface/abstract class for the refresh method for all viewmodels that may become dirty
+	/*
+	 * TODO add interface/abstract class for the refresh method for all 
+	 * viewmodels that may become dirty and need to be manually refreshed.
+	 */
 	private ReadOnlyObjectWrapper<AbilityScoresViewModel> abilities = new ReadOnlyObjectWrapper<>();
 	private ReadOnlyBooleanWrapper isEditing = new ReadOnlyBooleanWrapper();
 	private Creature creature;
 	private ReadOnlyIntegerWrapper currentPhaseIndex = new ReadOnlyIntegerWrapper();
 	/**
 	 * Initialises a {@link CreatureViewModel} object to display a 
-	 * {@link Creature object}.
+	 * {@link Creature} object.
 	 * @param creature object to display. Cannot be null.
 	 * @throws a NullPointerException if the creature is null.
 	 */
@@ -31,7 +33,8 @@ public class CreatureViewModel implements ViewModel{
 			throw new NullPointerException("Tried to initialise a CreatureViewModel on a null creature");
 		}
 		this.creature = creature;
-		this.abilities.set(new AbilityScoresViewModel(creature.getAbilityScores(), creature.getTempAbilityScores()));
+		this.abilities.set(new AbilityScoresViewModel(creature,
+				this.isInEditMode()));
 		this.refresh();
 	}
 	
@@ -50,16 +53,13 @@ public class CreatureViewModel implements ViewModel{
 	}
 	
 	/**
-	 * Refresh the observable fields from the model.
-	 * This method should be called if the underlying {@link Creature} object 
+	 * Refreshes the observable fields from the model.
+	 * This method must be called if the underlying {@link Creature} object 
 	 * is modified from outside of this object.
 	 */
 	public void refresh() {
-		//Refresh tmpAbilityScore of the ability score list items
 		for(AbilityScoreListItemViewModel item : this.abilities.get().getListItems()) {
-			//settTmpAbility is supposed to refresh the object
-			item.setTmpAbility(this.creature.getTempAbilityScores().getScore(
-					AbilityName.valueOf(item.getAbilityName())));
+			item.refresh();
 		}
 		this.isEditing.set(creature.isEditable());
 		this.currentPhaseIndex.set(creature.getInitialisationStatus().ordinal());

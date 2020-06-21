@@ -1,4 +1,4 @@
-.emphasis { 
+.STRONG_EMPHASIS { 
 	-fx-background-color: red; 
 	-fx-font-weight: bold;
 }
@@ -20,4 +20,20 @@
 
 .NULLIFY {
 	-fx-text-fill: blue;
+}
+
+.EDITABLE {
+	-fx-prompt-text-fill: red;
+}
+
+.VALID {
+	-fx-border-color: green;
+}
+
+.INVALID {
+	-fx-border-color: red;
+}
+.text-field {
+    -fx-background-color: #a9a9a9 , white , white;
+    -fx-background-insets: 0 -1 -1 -1, 0 0 0 0, 0 -1 3 -1;
 }

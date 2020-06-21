@@ -9,6 +9,7 @@ import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.ObservableList;
 import model.creatures.AbilityScores;
@@ -18,6 +19,8 @@ import model.creatures.CreatureTest;
 import model.creatures.CreatureParameters.AbilityName;
 import model.values.AbilityScore;
 import model.values.ValueParameters;
+import viewmodel.tools.ViewModelParameters;
+import viewmodel.tools.ViewModelParameters.Styles;
 
 public class AbilityScoreListItemViewModelTest {
 	private AbilityScores abilities;
@@ -29,6 +32,8 @@ public class AbilityScoreListItemViewModelTest {
 	private AbilityScore nullAbility;
 	private AbilityScore tmpNullAbility;
 	private Creature creature;
+	private Creature nullCreature;
+	private SimpleBooleanProperty isModifiable = new SimpleBooleanProperty(true);
 	
 
 	/**
@@ -48,18 +53,22 @@ public class AbilityScoreListItemViewModelTest {
 			i++;
 		}
 		tmpAbilities = AbilityScores.create(values);
+		creature.edit();
 		viewModels = new EnumMap<AbilityName, AbilityScoreListItemViewModel>(AbilityName.class);
-		for(Map.Entry<AbilityName, AbilityScore> entry: abilities) {
+		for(Map.Entry<AbilityName, AbilityScore> entry: tmpAbilities) {
+			creature.setAbilityScore(entry.getKey(), entry.getValue().getValue());
 			viewModels.put(entry.getKey(),
-					new AbilityScoreListItemViewModel(entry.getKey(), entry.getValue(),
-							tmpAbilities.getScore(entry.getKey())));
+					new AbilityScoreListItemViewModel(entry.getKey(), creature,
+									isModifiable));
 		}
 		AbilityScores nullAbilities = AbilityScores.create(null);
 		nullAbilityName = AbilityName.STRENGTH;
 		nullAbility = nullAbilities.getScore(nullAbilityName);
 		tmpNullAbility = tmpAbilities.getScore(nullAbilityName);
+		nullCreature = new Creature();
+		nullCreature.setAbilityScore(nullAbilityName, tmpNullAbility.getValue());
 		nullViewModel = new AbilityScoreListItemViewModel(nullAbilityName,
-				nullAbility, tmpNullAbility);
+				nullCreature, isModifiable);
 	}
 
 	/**
@@ -68,34 +77,24 @@ public class AbilityScoreListItemViewModelTest {
 	 */
 	@Test
 	public void testNullInput() {
-		try {
-			new AbilityScoreListItemViewModel(nullAbilityName, abilities.getScore(nullAbilityName), null);
-			fail("An AbilityScoreListItemViewModel cannot accept a null parameter");
-		} catch (NullPointerException e) {}
-		try {
-			new AbilityScoreListItemViewModel(nullAbilityName, null, abilities.getScore(nullAbilityName));
-			fail("An AbilityScoreListItemViewModel cannot accept a null parameter");
-		} catch (NullPointerException e) {}
-		try {
-			new AbilityScoreListItemViewModel(null, abilities.getScore(nullAbilityName), abilities.getScore(nullAbilityName));
-			fail("An AbilityScoreListItemViewModel cannot accept a null parameter");
-		} catch (NullPointerException e) {}
-		try {
-			new AbilityScoreListItemViewModel(nullAbilityName, null, null);
-			fail("An AbilityScoreListItemViewModel cannot accept a null parameter");
-		} catch (NullPointerException e) {}
-		try {
-			new AbilityScoreListItemViewModel(null, abilities.getScore(nullAbilityName), null);
-			fail("An AbilityScoreListItemViewModel cannot accept a null parameter");
-		} catch (NullPointerException e) {}
-		try {
-			new AbilityScoreListItemViewModel(null, null, abilities.getScore(nullAbilityName));
-			fail("An AbilityScoreListItemViewModel cannot accept a null parameter");
-		} catch (NullPointerException e) {}
-		try {
-			new AbilityScoreListItemViewModel(null, null, null);
-			fail("An AbilityScoreListItemViewModel cannot accept a null parameter");
-		} catch (NullPointerException e) {}
+		for(AbilityName name : new AbilityName[] {nullAbilityName, null}) {
+			for(Creature creature : new Creature[] {creature, nullCreature, null}) {
+				for(ObservableBooleanValue value : new ObservableBooleanValue[] {isModifiable, null}) {
+					if(name != null && creature != null && value != null) {
+						continue;
+					} else {
+						try {
+							new AbilityScoreListItemViewModel(name, creature, value);
+							fail("An AbilityScoreListItemViewModel cannot accept a null parameter, "
+									+ "failed to throw exception with null parameter(s) "
+									+ (name == null ? "name, " : "")
+									+ (creature == null ? "ability, " : "")
+									+ (value == null ? "isModifiable" : ""));
+						} catch (NullPointerException e) {}
+					}
+				}
+			}
+		}
 	}
 	
 	/**
@@ -168,7 +167,7 @@ public class AbilityScoreListItemViewModelTest {
 
 	/**
 	 * Checks that the 
-	 * {@link AbilityScoreListItemViewModel#isScoreModifiable()} method returns
+	 * {@link AbilityScoreListItemViewModel#isScoreEditable()} method returns
 	 * an observable boolean which can be set to true or false but is false by 
 	 * default.
 	 */
@@ -182,20 +181,21 @@ public class AbilityScoreListItemViewModelTest {
 	
 	private void testScoreModifiabilityHelper(AbilityScoreListItemViewModel viewModel) {
 		//Check just this once that observable values behave as expected
-		ObservableBooleanValue value = viewModel.isScoreModifiable();
-		assertFalse("By default, a score is not modifiable",
-				viewModel.isScoreModifiable().get());
-		viewModel.setIsScoreModifiable(true);
+		ObservableBooleanValue value = viewModel.isScoreEditable();
+		assertEquals("By default, a score is not modifiable",
+				isModifiable.get(),
+				viewModel.isScoreEditable().get());
+		isModifiable.set(true);
 		assertTrue("After setting it to true, the value is true",
-				viewModel.isScoreModifiable().get());
+				viewModel.isScoreEditable().get());
 		assertTrue("The Observable should be updated to true", value.get());
-		viewModel.setIsScoreModifiable(false);
+		isModifiable.set(false);
 		assertFalse("After setting it to false, the value is false",
-				viewModel.isScoreModifiable().get());
+				viewModel.isScoreEditable().get());
 		assertFalse("The Observable should be updated to false", value.get());
-		viewModel.setIsScoreModifiable(false);
+		isModifiable.set(false);
 		assertFalse("Setting to false a false variable should not be an issue",
-				viewModel.isScoreModifiable().get());
+				viewModel.isScoreEditable().get());
 	}
 	
 	/**
@@ -206,6 +206,7 @@ public class AbilityScoreListItemViewModelTest {
 	 */
 	@Test
 	public void testRefresh() {
+		creature.edit();
 		//Check without any modification
 		for(Map.Entry<AbilityName, AbilityScoreListItemViewModel> entry : viewModels.entrySet()) {
 			testRefreshHelper(entry.getValue(), 
@@ -214,22 +215,18 @@ public class AbilityScoreListItemViewModelTest {
 		}
 		testRefreshHelper(nullViewModel, nullAbility, tmpNullAbility);
 		//Change temporary abilities
-		EnumMap<AbilityName, Integer> values = new EnumMap<>(AbilityName.class);
 		int i = ValueParameters.MIN_ABILITY_SCORE;
 		for(AbilityName ability: AbilityName.values()) {
-			values.put(ability, i);
+			creature.setAbilityScore(ability, i);
 			i += 4;
 		}
-		tmpAbilities = AbilityScores.create(values);
 		for(Map.Entry<AbilityName, AbilityScoreListItemViewModel> entry : viewModels.entrySet()) {
-			entry.getValue().setTmpAbility(tmpAbilities.getScore(entry.getKey()));
 			entry.getValue().refresh();
 			testRefreshHelper(entry.getValue(), 
 					abilities.getScore(entry.getKey()), 
-					tmpAbilities.getScore(entry.getKey()));
+					creature.getTempAbilityScores().getScore(entry.getKey()));
 		}
 		//Change abilities
-		creature.edit();
 		for(AbilityName ability: AbilityName.values()) {
 			creature.setAbilityScore(ability, tmpAbilities.getScore(ability).getValue());
 		}
@@ -246,7 +243,6 @@ public class AbilityScoreListItemViewModelTest {
 		}
 		creature.edit();
 		creature.setAbilityScore(nullAbilityName, null);
-		viewModels.get(nullAbilityName).setTmpAbility(creature.getTempAbilityScores().getScore(nullAbilityName));
 		viewModels.get(nullAbilityName).refresh();
 		testRefreshHelper(viewModels.get(nullAbilityName), 
 				creature.getAbilityScores().getScore(nullAbilityName),
@@ -272,34 +268,6 @@ public class AbilityScoreListItemViewModelTest {
 	}
 	
 	/**
-	 * Checks that 
-	 * {@link AbilityScoreListItemViewModel#setTmpAbility(AbilityScore)}
-	 * modifies the ability score formatted by the viewModel.
-	 */
-	@Test
-	public void testSetTmpAbility() {
-		EnumMap<AbilityName, Integer> values = AbilityScoresTest.basicAbilityScores();
-		int i = 0;
-		for(AbilityName ability: AbilityName.values()) {
-			values.put(ability, i);
-			i += 5;
-		}
-		AbilityScores modifiedAbilities = AbilityScores.create(values);
-		for(Map.Entry<AbilityName, AbilityScoreListItemViewModel> entry : viewModels.entrySet()) {
-			entry.getValue().setTmpAbility(modifiedAbilities.getScore(entry.getKey()));
-			testRefreshHelper(entry.getValue(), 
-					abilities.getScore(entry.getKey()), 
-					modifiedAbilities.getScore(entry.getKey()));
-		}
-		//Test de-nullification
-		nullViewModel.setTmpAbility(modifiedAbilities.getScore(nullAbilityName));
-		testRefreshHelper(nullViewModel, nullAbility, modifiedAbilities.getScore(nullAbilityName));
-		//Test nullification
-		viewModels.get(nullAbilityName).setTmpAbility(nullAbility);
-		testRefreshHelper(viewModels.get(nullAbilityName), abilities.getScore(nullAbilityName), nullAbility);
-	}
-	
-	/**
 	 * Checks that the style classes returned by a view model are consistent
 	 * with the ability scores it wraps.
 	 */
@@ -318,7 +286,7 @@ public class AbilityScoreListItemViewModelTest {
 	 * with the ability scores it wraps:
 	 * 1. exactly one element
 	 * 2. the element is one of the String values of 
-	 * {@link CreatureViewModelParameters.Modification} consistent with
+	 * {@link ViewModelParameters.Styles} consistent with
 	 * {@link AbilityScore#compareTo(AbilityScore)}.
 	 * @param vm					to check
 	 * @param expectedAbility		ability wrapped by the view model
@@ -332,22 +300,22 @@ public class AbilityScoreListItemViewModelTest {
 				(comparison) -> {
 					String expectedResult;
 					if(comparison < 0) {
-						expectedResult = CreatureViewModelParameters.Modification.WORSE.name();
+						expectedResult = ViewModelParameters.Styles.WORSE.name();
 					} else if(comparison == 0){
-						expectedResult = CreatureViewModelParameters.Modification.NONE.name();
+						expectedResult = ViewModelParameters.Styles.NONE.name();
 					} else {
-						expectedResult = CreatureViewModelParameters.Modification.BETTER.name();
+						expectedResult = ViewModelParameters.Styles.BETTER.name();
 					}
 					return expectedResult;
 				};
-		assertEquals("The score style has only one style",
-				1, scoreStyle.size());
+		assertEquals("The score style has exactly three styles",
+				3, scoreStyle.size());
 		assertEquals("The modifier style has only one style",
 				1, modifierStyle.size());
 		if(!expectedTmpAbility.isDefined() && expectedAbility.isDefined()) {
 			assertEquals("The score style of ability " + vm.getAbilityName() + 
 					" must correctly take nullification into account",
-					CreatureViewModelParameters.Modification.NULLIFY.name(),
+					ViewModelParameters.Styles.NULLIFY.name(),
 					scoreStyle.get(0));
 		} else {
 			assertEquals("The score style of ability " + vm.getAbilityName() +
@@ -358,5 +326,90 @@ public class AbilityScoreListItemViewModelTest {
 		assertEquals("The modifier style must be consistent with the comparison between the temporary and the actual modifier",
 				getExpectedResult.apply(expectedTmpAbility.getModifier() - expectedAbility.getModifier()),
 				modifierStyle.get(0));
+		if(vm.isScoreEditable().get()) {
+			assertEquals("If the score is editable, the editable style must be applied",
+					ViewModelParameters.Styles.EDITABLE.name(),
+					scoreStyle.get(1));
+		} else {
+			assertFalse("If the score is not editable, the editable style must not be applied",
+					scoreStyle.contains(ViewModelParameters.Styles.EDITABLE.name()));
+		}
 	}
+	/**
+	 * Checks that {@link AbilityScoreListItemViewModel#setScore(Integer)}
+	 * nullifies the tmpAbility of the {@link Creature} object on a null input.
+	 */
+	@Test
+	public void setScore_Nullify() {
+		viewModels.get(nullAbilityName).setScore(null);
+		assertFalse("Set score on a null input nullifies the ability score",
+				creature.getTempAbilityScores().getScore(nullAbilityName).isDefined());
+	}
+	/**
+	 * Checks that {@link AbilityScoreListItemViewModel#setScore(Integer)}
+	 * sets the input value as the tmpAbility of the {@link Creature} object on
+	 * a valid input.
+	 */
+	@Test
+	public void setScore_AssignValidValue() {
+		//Make sure to pick a value that is different from the current one.
+		int expected = prepareValidValue(nullAbilityName);
+		viewModels.get(nullAbilityName).setScore(expected);
+		assertEquals("Set score must modify the tmp ability score of the creature",
+				expected, 
+				creature.getTempAbilityScores().getScore(nullAbilityName).getValue());
+	}
+	/**
+	 * Checks that {@link AbilityScoreListItemViewModel#setScore(Integer)}
+	 * sets the valid style on a valid input.
+	 */
+	@Test
+	public void setScore_StyleValidValue() {
+		int expected = prepareValidValue(nullAbilityName);
+		viewModels.get(nullAbilityName).setScore(expected);
+		assertTrue("After a valid setScore, the style must be valid",
+				viewModels.get(nullAbilityName).getScoreStyleClasses().contains(Styles.VALID.name())
+				&& ! viewModels.get(nullAbilityName).getScoreStyleClasses().contains(Styles.INVALID.name()));
+	}
+	
+	/**
+	 * Return a value that is valid but different from the temporary one of the
+	 * creature.
+	 * @param name of the ability to use as a basis to compute the result.
+	 * @return	an integer between MIN_ABILITY_SCORE and MAX_ABILITY_SCORE
+	 */
+	private int prepareValidValue(AbilityName name) {
+		int result = creature.getTempAbilityScores().getScore(name).getValue() - 3;
+		while(result < ValueParameters.MIN_ABILITY_SCORE) {
+			result += 7;
+		}
+		return result;
+	}
+	/**
+	 * Checks that {@link AbilityScoreListItemViewModel#setScore(Integer)}
+	 * sets the input value as the tmpAbility of the {@link Creature} object on
+	 * an invalid input.
+	 */
+	@Test
+	public void setScore_AssignInvalidValue() {
+		int expected = ValueParameters.MAX_ABILITY_SCORE + 2;
+		viewModels.get(nullAbilityName).setScore(expected);
+		assertEquals("Set score must modify the tmp ability score of the creature",
+				expected, 
+				creature.getTempAbilityScores().getScore(nullAbilityName).getValue());
+	}
+	/**
+	 * Checks that {@link AbilityScoreListItemViewModel#setScore(Integer)}
+	 * sets the invalid style on an invalid input.
+	 */
+	@Test
+	public void setScore_StyleInvalidValue() {
+		int expected = ValueParameters.MIN_ABILITY_SCORE - 2;
+		viewModels.get(nullAbilityName).setScore(expected);
+		assertTrue("After a valid setScore, the style must be valid",
+				! viewModels.get(nullAbilityName).getScoreStyleClasses().contains(Styles.VALID.name())
+				&& viewModels.get(nullAbilityName).getScoreStyleClasses().contains(Styles.INVALID.name()));
+	}
+	
+	
 }

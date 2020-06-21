@@ -7,6 +7,7 @@ import java.util.EnumMap;
 import org.junit.Before;
 import org.junit.Test;
 
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.collections.ObservableList;
 import model.creatures.AbilityScoresTest;
 import model.creatures.Creature;
@@ -42,7 +43,8 @@ public class CreatureViewModelTest {
 	public void testGetAbilities() {
 		ObservableList<AbilityScoreListItemViewModel> actualAbilities = viewModel.getAbilities().get().getListItems();
 		ObservableList<AbilityScoreListItemViewModel> expectedAbilities = 
-				new AbilityScoresViewModel(creature.getAbilityScores(), creature.getTempAbilityScores())
+				new AbilityScoresViewModel(creature,
+						new ReadOnlyBooleanWrapper(true))
 				.getListItems();
 		assertEquals("The lists must be equal, so their length must match",
 				expectedAbilities.size(),

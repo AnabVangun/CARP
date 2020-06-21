@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import model.creatures.Creature;
+import viewmodel.tools.ViewModelParameters;
 
 /**
  * Test both {@link EditionBarViewModel} and {@link EditionBarItemViewModel}.
@@ -57,7 +58,7 @@ public class EditionBarViewModelTest {
 	
 	/**
 	 * Checks that {@link EditionBarItemViewModel#getStatus()} returns 
-	 * {@link EditionBarItemViewModel.Status#CURRENT_PHASE} if and only if the
+	 * {@link EditionBarItemViewModel.Emphasis#CURRENT_PHASE} if and only if the
 	 * object has the same index as the phase.
 	 */
 	@Test
@@ -70,18 +71,18 @@ public class EditionBarViewModelTest {
 
 	/**
 	 * Checks that {@link EditionBarItemViewModel#getStatus()} returns 
-	 * {@link EditionBarItemViewModel.Status#CURRENT_PHASE} if and only if the
+	 * {@link EditionBarItemViewModel.Emphasis#CURRENT_PHASE} if and only if the
 	 * object has the same index as the phase.
 	 * @param phase	in which the {@link EditionBarViewModel} is supposed to be.
 	 * @param vm	view model to check.
 	 */
 	protected static void testGetStatusHelper(int phase, EditionBarViewModel vm) {
 		for(int j = 0; j < vm.getListItems().size(); j++) {
-			EditionBarItemViewModel.Status expectedStatus =
-					j == phase ? EditionBarItemViewModel.Status.CURRENT_PHASE : EditionBarItemViewModel.Status.NULL;
+			ViewModelParameters.Styles expectedStatus =
+					j == phase ? ViewModelParameters.Styles.STRONG_EMPHASIS : null;
 			assertEquals("Only the corresponding item must and can correspond to the current phase",
-					expectedStatus.style,
-					vm.getListItems().get(j).getStatusStyle().get());
+					expectedStatus == null ? null : expectedStatus.name(),
+					vm.getListItems().get(j).getEmphasisStyle().get());
 		}
 	}
 }

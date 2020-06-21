@@ -8,26 +8,31 @@ import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import view.tools.ViewTools;
-import viewmodel.creatures.AbilityScoreListItemViewModel;
 import viewmodel.creatures.CreatureEditionViewModel;
 import viewmodel.creatures.CreatureViewModel;
 
 public class CreatureView implements Initializable, FxmlView<CreatureViewModel>{
 	@FXML
-	VBox root;
+	private VBox root;
 	@FXML
-	GridPane container;
+	private GridPane container;
 	@FXML
-	ListView<AbilityScoreListItemViewModel> abilities;
+	private VBox abilities;
 	@InjectViewModel
-	CreatureViewModel viewModel;
-	ResourceBundle resources;
+	private CreatureViewModel viewModel;
+	private ResourceBundle resources;
+	private AbilityScoresViewHandler abilitiesHandler;
+	/**
+	 * The different parts of the creature on display.
+	 */
+	protected static enum CreaturePart{
+		ABILITIES;
+	}
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -36,26 +41,44 @@ public class CreatureView implements Initializable, FxmlView<CreatureViewModel>{
 		AnchorPane.setLeftAnchor(root, 0.0);
 		AnchorPane.setRightAnchor(root, 0.0);
 		this.resources = resources;
-		setUpEditionBar();
 		//Include ability scores in the creature sheet
-		ViewTools.setUpListView(abilities, 
-				viewModel.getAbilities().get().getListItems(), 
-				AbilityScoreListItemView.class, 
-				resources);
+		abilitiesHandler = new AbilityScoresViewHandler(abilities, viewModel.getAbilities().get(), resources);
+		setUpEditionBar();
 	}
 	
+	/**
+	 * Sets up the {@link CreatureEditionView} object for this view.
+	 */
 	private void setUpEditionBar() {
 		//Build edition bar
 		Parent editionBar = FluentViewLoader.fxmlView(CreatureEditionView.class)
-				.viewModel(new CreatureEditionViewModel(viewModel.getCurrentEditionPhase()))
+				.codeBehind(new CreatureEditionView(this))
+				.viewModel(new CreatureEditionViewModel(viewModel))
 				.resourceBundle(resources)
 				.resourceBundle(ResourceBundle.getBundle("bundles.creature.CreatureEditionBundle"))
 				.load().getView();
 		//Display edition bar if and only if the creature is being edited
-		editionBar.managedProperty().bind(editionBar.visibleProperty());
-		editionBar.visibleProperty().bind(viewModel.isInEditMode());
+		editionBar.managedProperty().bind(viewModel.isInEditMode());
+		editionBar.visibleProperty().bind(editionBar.managedProperty());//XXX unclear if this really is necessary
 		//Add edition bar to the layout
 		root.getChildren().add(0, editionBar);
+	}
+	
+	/**
+	 * Forges a copy of the requested part of the creature bound to the same
+	 * view model as the original {@link Node}.
+	 * @param part	of the creature to copy
+	 * @return	a {@link Node} displaying the selected part of the creature.
+	 */
+	public Node getCreaturePart(CreaturePart part) {
+		switch(part) {
+		case ABILITIES:
+			VBox result = new VBox();
+			abilitiesHandler.fillContainer(result);
+			return result;
+		default:
+			return null;
+		}
 	}
 
 }
