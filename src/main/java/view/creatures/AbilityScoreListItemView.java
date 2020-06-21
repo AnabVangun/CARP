@@ -47,7 +47,7 @@ public class AbilityScoreListItemView implements FxmlView<AbilityScoreListItemVi
 	
 	public AbilityScoreListItemView() {
 		this.styleListener = observable -> updateStyleClass(observable.getList());
-		this.editableListener = (Observable observable) -> updateEditability();
+		this.editableListener = (Observable observable) -> updateScoreField();
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class AbilityScoreListItemView implements FxmlView<AbilityScoreListItemVi
 			default:
 			}
 		};
-		updateEditability();
+		updateScoreField();
 		viewModel.isScoreEditable().addListener(new WeakInvalidationListener(editableListener));
 	}
 	
@@ -97,15 +97,15 @@ public class AbilityScoreListItemView implements FxmlView<AbilityScoreListItemVi
 	/**
 	 * Updates the editability of the object.
 	 */
-	private void updateEditability() {
-		//XXX this line is needed to refresh the viewModel
+	private void updateScoreField() {
+		//Mark value as valid to listen for future invalidation events.
 		viewModel.getAbilityScore().getValue();
 		if(viewModel.isScoreEditable().get()) {
-			this.abilityScoreField.setEditable(true);
-			this.abilityScoreField.setPromptText(resources.getString("promptInteger"));
 			this.abilityScoreField.textProperty().unbind();
 			this.abilityScoreField.setTextFormatter(viewModel.getAbilityScoreFormatter());
+			this.abilityScoreField.setPromptText(resources.getString("promptInteger"));
 			this.abilityScoreField.setOnKeyPressed(specialKeyHandler);
+			this.abilityScoreField.setEditable(true);
 		}
 		if(!viewModel.isScoreEditable().get()) {
 			this.abilityScoreField.setOnKeyPressed(null);

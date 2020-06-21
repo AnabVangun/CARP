@@ -38,8 +38,7 @@ public class CreatureEditionViewModel implements ViewModel {
 	 */
 	private final CreatureViewModel creatureVM;
 	/** This index tracks the user's choice of method to edit the creature. */
-	//XXX set to 2 waiting for STANDARD to be implemented
-	private final IntegerProperty currentSelectedMethod = new SimpleIntegerProperty(2);
+	private final IntegerProperty currentSelectedMethod = new SimpleIntegerProperty();
 	/** This contains the key to get the String describing the current phase.*/
 	private final ReadOnlyStringWrapper currentPhaseDescriptionKey = new ReadOnlyStringWrapper();
 	/** 
@@ -87,6 +86,21 @@ public class CreatureEditionViewModel implements ViewModel {
 	private void phaseRefresh() {
 		Creature.InitStatus phase = Creature.InitStatus.values()[this.currentPhaseIndex.get()];
 		this.currentPhaseDescriptionKey.set(phase.name()+"_PHASE");
+		switch(phase) {
+		case ABILITIES:
+			this.hasSeveralMethods.set(true);
+			this.setMethodChoiceKey(AbilityGenerationMethod.values());
+			this.isActionExpected.set(true);
+			break;
+		case REVIEW:
+		case COMPLETED:
+			this.hasSeveralMethods.set(false);
+			this.setMethodChoiceKey(null);
+			this.isActionExpected.set(false);
+			break;
+		default:
+			break;
+		}
 		this.methodRefresh(phase);
 	}
 	
@@ -95,18 +109,13 @@ public class CreatureEditionViewModel implements ViewModel {
 	 * @param phase	current phase of the edition process.
 	 */
 	private void methodRefresh(Creature.InitStatus phase) {
+		this.currentSelectedMethod.get();//Refresh observable
 		switch(phase) {
 		case ABILITIES:
-			this.hasSeveralMethods.set(true);
-			this.setMethodChoiceKey(AbilityGenerationMethod.values());
-			this.isActionExpected.set(true);
-			this.AbilitiesMethodRefresh(AbilityGenerationMethod.values()[this.currentSelectedMethod.get()]);
+			this.AbilitiesMethodRefresh();
 			break;
 		case REVIEW:
 		case COMPLETED:
-			this.hasSeveralMethods.set(false);
-			this.setMethodChoiceKey(null);
-			this.isActionExpected.set(false);
 			break;
 		default:
 			throw new NotYetImplementedException();
@@ -124,9 +133,14 @@ public class CreatureEditionViewModel implements ViewModel {
 	 * Refreshes the view depending on the method used to generate 
 	 * {@link AbilityScores}. This assumes that the current edition phase is
 	 * consistent.
-	 * @param method picked to generate the scores.
 	 */
-	private void AbilitiesMethodRefresh(AbilityGenerationMethod method) {
+	private void AbilitiesMethodRefresh() {
+		int methodIndex = this.currentSelectedMethod.get();
+		if(methodIndex < 0
+				|| methodIndex > AbilityGenerationMethod.values().length) {
+			return;
+		}
+		AbilityGenerationMethod method = AbilityGenerationMethod.values()[methodIndex];
 		switch(method) {
 		case STANDARD:
 		case DICE_POOL:
@@ -136,8 +150,7 @@ public class CreatureEditionViewModel implements ViewModel {
 		default:
 			throw new NotYetImplementedException();
 		}
-		creatureVM.getAbilities().get().setGenerationMethod(
-				AbilityGenerationMethod.values()[this.currentSelectedMethod.get()]);
+		creatureVM.getAbilities().get().setGenerationMethod(method);
 	}
 
 	/**
@@ -172,16 +185,17 @@ public class CreatureEditionViewModel implements ViewModel {
 	}
 	
 	/**
-	 * Returns the index of the selected method for the current phase. The 
+	 * Returns the index of the selected method for the current phase. The
 	 * value has no meaning when
 	 * {@link CreatureEditionViewModel#hasSeveralMethods()} evaluates to false.
-	 * @return an observable integer which corresponds to the index of the 
+	 * @return an observable integer which corresponds to the index of the
 	 * selected method in
 	 * {@link CreatureEditionViewModel#getMethodNameKeys()}.
 	 */
-	public IntegerProperty getSelectedMethodIndex() {
+	public IntegerProperty selectedMethodIndexProperty() {
 		return this.currentSelectedMethod;
 	}
+
 	
 	/**
 	 * Returns an {@link ObservableListValue} containing the descriptions of 
@@ -209,19 +223,19 @@ public class CreatureEditionViewModel implements ViewModel {
 		}
 		this.methodNameKeys.setAll(Arrays.asList(values).stream()
 				.map(value -> value.name() + "_BUTTON").toArray(String[]::new));
-		if(this.currentSelectedMethod != null) {
-			this.methodDescriptionBinding = new ObjectBinding<String>() {
-				{super.bind(currentSelectedMethod);}
-				@Override
-				protected String computeValue() {
+		this.methodDescriptionBinding = new ObjectBinding<String>() {
+			//TODO make values an observable and bind this object to it
+			{super.bind(currentSelectedMethod);}
+			@Override
+			protected String computeValue() {
+				if(currentSelectedMethod.get() < 0 || currentSelectedMethod.get() > values.length) {
+					return "NOT_APPLICABLE";
+				} else {
 					return values[currentSelectedMethod.get()].name() + "_DESCRIPTION";
-				}	
-			};
-			this.methodDescriptionKey.bind(methodDescriptionBinding);
-		} else {
-			this.methodDescriptionBinding = null;
-			this.methodDescriptionKey.unbind();
-		}
+				}
+			}	
+		};
+		this.methodDescriptionKey.bind(methodDescriptionBinding);
 	}
 
 	/**

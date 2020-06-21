@@ -26,6 +26,7 @@ public class CreatureEditionBundle extends ListResourceBundle {
 			{CreatureParameters.AbilityGenerationMethod.DICE_POOL.name() + "_DESCRIPTION", "TBD"},
 			{CreatureParameters.AbilityGenerationMethod.STANDARD.name() + "_BUTTON", "Standard"},
 			{CreatureParameters.AbilityGenerationMethod.STANDARD.name() + "_DESCRIPTION", "TBD"},
+			{"NOT_APPLICABLE", ""},
 	};
 
 }

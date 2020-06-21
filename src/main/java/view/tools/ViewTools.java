@@ -6,6 +6,8 @@ import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.ViewModel;
 import de.saxsys.mvvmfx.utils.viewlist.CachedViewModelCellFactory;
 import javafx.beans.binding.ListBinding;
+import javafx.beans.binding.StringBinding;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ListView;
@@ -65,5 +67,22 @@ public final class ViewTools {
 				.toArray(String[]::new)));
 			}
 		});
+	}
+	
+	/**
+	 * Forges a {@link StringBinding} item using the key stored in the 
+	 * observable input to get an internationalised text from the input bundle.
+	 * @param resources		associating a value to the key.
+	 * @param observable	key to get the internationalised text.
+	 * @return	the internationalised text bound to the key.
+	 */
+	public static StringBinding I18nStringBinding(ResourceBundle resources, ObservableValue<String> observable) {
+		return new StringBinding() {
+			{super.bind(observable);}
+			@Override
+			protected String computeValue() {
+				return resources.getString(observable.getValue());
+			}
+		};
 	}
 }

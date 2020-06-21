@@ -8,6 +8,8 @@ import de.saxsys.mvvmfx.InjectViewModel;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.WeakInvalidationListener;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
@@ -43,8 +45,8 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 	/** Listener reacting to changes in the current phase. */
 	private InvalidationListener phaseListener;
 	/** Listener reacting to changes in the current selected method. */
-	private InvalidationListener methodListener;
-	/** View of the creature being edited. */
+	private ChangeListener<Number> methodListener;
+	/** View of the creature being edited to get copies of selected parts. */
 	private final CreatureView creatureView;
 	
 	/**
@@ -67,11 +69,13 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 		phaseListener = (Observable observable) -> refreshPhase(resources);
 		vm.getCurrentPhaseDescriptionKey().addListener(new WeakInvalidationListener(phaseListener));
 		//Set elements related to method description
-		vm.getSelectedMethodIndex().bind(methodChoice.getFocusModel().focusedIndexProperty());
+		methodListener = (observable, oldValue, newValue) -> refreshMethod(resources);
+		methodChoice.getSelectionModel().selectedIndexProperty().addListener(
+				new WeakChangeListener<>(methodListener));
 		refreshMethod(resources);
-		methodListener = (Observable observable) -> refreshMethod(resources);
-		methodChoice.getFocusModel().focusedIndexProperty().addListener(
-				new WeakInvalidationListener(methodListener));
+		methodDescription.textProperty().bind(
+				ViewTools.I18nStringBinding(resources, vm.getMethodDescriptionKey()));
+		vm.selectedMethodIndexProperty().bind(methodChoice.getSelectionModel().selectedIndexProperty());
 	}
 
 	/**
@@ -81,11 +85,14 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 	private void refreshPhase(ResourceBundle resources) {
 		//Set the description of the current phase
 		phaseDescription.setText(resources.getString(vm.getCurrentPhaseDescriptionKey().getValue()));
-		//Set the method choice, visible only if several methods exist
+		/*
+		 * Make the method choice visible only if several methods exist. This
+		 * is done here rather than by binding because the visibility can only
+		 * change when changing phase, not while in the middle of a phase.
+		 */
 		methodChoiceContainer.setManaged(vm.hasSeveralMethods().get());
 		methodChoiceContainer.setVisible(vm.hasSeveralMethods().get());
 		ViewTools.setI18nListItems(methodChoice, vm.getMethodNameKeys(), resources);
-		methodChoice.getSelectionModel().clearAndSelect(2);//XXX 2 temporary waiting for STANDARD to be implemented
 		//Set the copy of the CreatureView being edited
 		switch(vm.currentPhaseIndex.get()) {
 		case 0:
@@ -103,9 +110,6 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 	private void refreshMethod(ResourceBundle resources) {
 		methodActionContainer.setManaged(vm.isActionExpected().get());
 		methodActionContainer.setVisible(vm.isActionExpected().get());
-		if(vm.isActionExpected().get()) {
-			methodDescription.setText(resources.getString(vm.getMethodDescriptionKey().getValue()));
-		}
 	}
 
 }

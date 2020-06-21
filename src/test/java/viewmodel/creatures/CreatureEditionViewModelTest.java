@@ -24,7 +24,7 @@ public class CreatureEditionViewModelTest {
 		creatureVM = new CreatureViewModel(new Creature());
 		methodIndex = new SimpleIntegerProperty(0);
 		vm = new CreatureEditionViewModel(creatureVM);
-		methodIndex.bindBidirectional(vm.getSelectedMethodIndex());
+		methodIndex.bindBidirectional(vm.selectedMethodIndexProperty());
 	}
 	/**
 	 * Checks that the edition bar is not null and has the right
