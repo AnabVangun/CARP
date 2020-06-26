@@ -131,4 +131,47 @@ public class CreatureEditionViewModelTest {
 		AbilityScoresViewModelTest.testSetGenerationMethodHelper(creatureVM.getAbilities().get(), 
 				AbilityGenerationMethod.DIRECT_ASSIGNMENT);
 	}
+	
+	@Test
+	public void validateModificationStep_failWithMissingAbilities_PhaseUnchanged() {
+		int currentPhase = vm.currentPhaseIndex.get();
+		vm.validateModificationStep();
+		assertEquals("The current phase must not change when some mandatory abilities are missing",
+				currentPhase, vm.currentPhaseIndex.get());
+	}
+	
+	@Test
+	public void validateModificationStep_failWithMissingAbilities_StyleUpdated() {
+		fail("not yet implemented");//TODO
+	}
+	
+	@Test
+	public void validateModificationStep_failWithInvalidAbilities_PhaseUnchanged() {
+		fail("not yet implemented");//TODO
+	}
+	
+	@Test
+	public void validateModificationStep_failWithInvalidAbilities_StyleUpdated() {
+		fail("not yet implemented");//TODO
+	}
+	
+	@Test
+	public void validateModificationStep_succeedWithMissingAbilities_PhaseChanged() {
+		fail("not yet implemented");//TODO
+	}
+	
+	@Test
+	public void validateModificationStep_succeedWithMissingAbilities_StyleUpdated() {
+		fail("not yet implemented");//TODO
+	}
+	
+	@Test
+	public void validateModificationStep_succeedWithValidAbilities_PhaseChanged(){
+		fail("not yet implemented");//TODO
+	}
+	
+	@Test
+	public void validateModificationStep_succeedWithValidAbilities_StyleUpdated(){
+		fail("not yet implemented");//TODO
+	}
 }

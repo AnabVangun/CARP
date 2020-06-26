@@ -107,19 +107,19 @@ public class CreatureTest {
 		assertTrue("A creature in the first step of the initialisation process is editable",
 				creature.isEditable());
 		assertFalse("A creature with ability scores not initialised does not validate the ability step",
-				creature.validateInitStep());
+				creature.validateModifStep());
 		//Set valid ability scores
 		Map<AbilityName, Integer> scores = AbilityScoresTest.basicAbilityScores();
 		for(AbilityName ability : scores.keySet()) {
 			creature.setAbilityScore(ability, scores.get(ability));
 		}
 		assertTrue("A creature with valid ability scores validates the ability step",
-				creature.validateInitStep());
+				creature.validateModifStep());
 		assertEquals("A creature which has validated the ability step is under final review",
 				Creature.InitStatus.REVIEW,
 				creature.getInitialisationStatus()); //XXX update me when new init steps are defined
 		try {
-			creature.validateInitStep();
+			creature.validateModifStep();
 			fail("The " + Creature.InitStatus.REVIEW + " step cannot be validated.");
 		} catch (IllegalStateException e) {}
 	}

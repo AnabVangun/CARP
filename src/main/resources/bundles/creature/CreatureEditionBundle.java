@@ -27,6 +27,7 @@ public class CreatureEditionBundle extends ListResourceBundle {
 			{CreatureParameters.AbilityGenerationMethod.STANDARD.name() + "_BUTTON", "Standard"},
 			{CreatureParameters.AbilityGenerationMethod.STANDARD.name() + "_DESCRIPTION", "TBD"},
 			{"NOT_APPLICABLE", ""},
+			{"VALIDATE_BUTTON", "Validate"}
 	};
 
 }

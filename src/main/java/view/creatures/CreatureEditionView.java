@@ -12,6 +12,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -40,6 +41,8 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 	private HBox methodActionContainer;
 	@FXML
 	private AnchorPane creaturePartCopy;
+	@FXML
+	private Button validateButton;
 	@InjectViewModel
 	private CreatureEditionViewModel vm;
 	/** Listener reacting to changes in the current phase. */
@@ -76,6 +79,8 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 		methodDescription.textProperty().bind(
 				ViewTools.I18nStringBinding(resources, vm.getMethodDescriptionKey()));
 		vm.selectedMethodIndexProperty().bind(methodChoice.getSelectionModel().selectedIndexProperty());
+		//FIXME even before this was set, on debug mode clicking on "direct assignment blocks"
+		validateButton.setOnAction((e) -> this.validateModificationStep());
 	}
 
 	/**
@@ -112,4 +117,10 @@ public class CreatureEditionView implements Initializable, FxmlView<CreatureEdit
 		methodActionContainer.setVisible(vm.isActionExpected().get());
 	}
 
+	/**
+	 * Validates the current step of the edition process of the creature.
+	 */
+	public void validateModificationStep() {
+		vm.validateModificationStep();
+	}
 }

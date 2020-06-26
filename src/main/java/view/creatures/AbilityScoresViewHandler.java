@@ -47,5 +47,4 @@ public class AbilityScoresViewHandler {
 	public void fillContainer(Pane container) {
 		setUpView(container);
 	}
-
 }

@@ -144,7 +144,7 @@ public class Creature {
 	 * @throws IllegalStateException if the creature is in the 
 	 * {@link InitStatus#REVIEW} or {@link InitStatus#COMPLETED} step.
 	 */
-	public boolean validateInitStep() throws IllegalStateException{
+	public boolean validateModifStep() throws IllegalStateException{
 		switch(this.getInitialisationStatus()) {
 		case ABILITIES:
 			if(this.getTempAbilityScores().checkValidity().isEmpty()) {

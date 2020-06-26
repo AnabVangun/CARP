@@ -218,7 +218,10 @@ public class CreatureEditionViewModel implements ViewModel {
 	private void setMethodChoiceKey(Enum[] values) {
 		if(values == null) {
 			this.methodNameKeys.clear();
-			this.methodDescriptionKey.set("");
+			this.methodDescriptionKey.unbind();
+			this.methodDescriptionKey.set("NOT_APPLICABLE");
+			this.methodDescriptionBinding.dispose();
+			this.methodDescriptionBinding = null;
 			return;
 		}
 		this.methodNameKeys.setAll(Arrays.asList(values).stream()
@@ -247,5 +250,15 @@ public class CreatureEditionViewModel implements ViewModel {
 	 */
 	public ObservableBooleanValue isActionExpected() {
 		return this.isActionExpected.getReadOnlyProperty();
+	}
+	
+	/**
+	 * Verifies that the current state of the current phase is valid and that
+	 * the modification process can move forward, and do so if it is the case.
+	 * Otherwise, updates the styles to highlight the invalid parts to address.
+	 */
+	public void validateModificationStep() {
+		creatureVM.validateModificationStep();
+		creatureVM.refresh();
 	}
 }

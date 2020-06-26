@@ -80,5 +80,4 @@ public class CreatureView implements Initializable, FxmlView<CreatureViewModel>{
 			return null;
 		}
 	}
-
 }

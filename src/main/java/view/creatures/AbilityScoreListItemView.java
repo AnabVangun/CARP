@@ -5,20 +5,18 @@ package view.creatures;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.WeakInvalidationListener;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.WeakListChangeListener;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
 import viewmodel.creatures.AbilityScoreListItemViewModel;
 
 /**
@@ -42,12 +40,14 @@ public class AbilityScoreListItemView implements FxmlView<AbilityScoreListItemVi
 	/** Listener used to react to changes to style classes. */
 	private final ListChangeListener<String> styleListener;
 	private final InvalidationListener editableListener;
-	private EventHandler<KeyEvent> specialKeyHandler;
+	private final ChangeListener<String> textChangedListener;
+	private boolean isTextChangedListenerAdded;
 	private ResourceBundle resources;
 	
 	public AbilityScoreListItemView() {
 		this.styleListener = observable -> updateStyleClass(observable.getList());
 		this.editableListener = (Observable observable) -> updateScoreField();
+		this.textChangedListener = (observable, newValue, oldValue) -> this.commitValue();
 	}
 
 	@Override
@@ -58,7 +58,6 @@ public class AbilityScoreListItemView implements FxmlView<AbilityScoreListItemVi
 		 * Handle ability score and modifier: set value, set style, listen to
 		 * modifications. 
 		 */
-//		abilityScoreField.textProperty().bind(viewModel.getAbilityScore());
 		viewModel.getAbilityScore().addListener(new WeakInvalidationListener(editableListener));
 		updateStyleClass(viewModel.getScoreStyleClasses());
 		viewModel.getScoreStyleClasses().addListener(new WeakListChangeListener<>(styleListener));
@@ -66,15 +65,6 @@ public class AbilityScoreListItemView implements FxmlView<AbilityScoreListItemVi
 		updateStyleClass(viewModel.getModifierStyleClasses());
 		viewModel.getModifierStyleClasses().addListener(new WeakListChangeListener<>(styleListener));
 		//Manage editability
-		specialKeyHandler = (KeyEvent e) -> {
-			switch(e.getCode()) {
-			case ENTER:
-			case TAB:
-				abilityScoreField.commitValue();
-				viewModel.setScore((Integer) abilityScoreField.getTextFormatter().getValue());
-			default:
-			}
-		};
 		updateScoreField();
 		viewModel.isScoreEditable().addListener(new WeakInvalidationListener(editableListener));
 	}
@@ -104,16 +94,29 @@ public class AbilityScoreListItemView implements FxmlView<AbilityScoreListItemVi
 			this.abilityScoreField.textProperty().unbind();
 			this.abilityScoreField.setTextFormatter(viewModel.getAbilityScoreFormatter());
 			this.abilityScoreField.setPromptText(resources.getString("promptInteger"));
-			this.abilityScoreField.setOnKeyPressed(specialKeyHandler);
+			if(!isTextChangedListenerAdded) {
+				this.abilityScoreField.textProperty().addListener(textChangedListener);
+				isTextChangedListenerAdded = true;
+			}
 			this.abilityScoreField.setEditable(true);
 		}
 		if(!viewModel.isScoreEditable().get()) {
-			this.abilityScoreField.setOnKeyPressed(null);
 			this.abilityScoreField.setEditable(false);
+			if(isTextChangedListenerAdded) {
+				this.abilityScoreField.textProperty().removeListener(textChangedListener);
+				isTextChangedListenerAdded = false;
+			}
 			this.abilityScoreField.setPromptText(null);
 			this.abilityScoreField.setTextFormatter(null);
 			this.abilityScoreField.textProperty().bind(viewModel.getAbilityScore());
 		}
 	}
 
+	//TODO Jdoc
+	public void commitValue() {
+		//FIXME this method is called twice whenever text is written
+//		System.out.println("New value:" + abilityScoreField.getText());
+		abilityScoreField.commitValue();
+		viewModel.setScore((Integer) abilityScoreField.getTextFormatter().getValue());
+	}
 }

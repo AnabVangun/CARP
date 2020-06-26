@@ -75,7 +75,7 @@ public class CreatureViewModelTest {
 		assertTrue("A creature with just ability scores not validated is in edit mode",
 				viewModel.isInEditMode().get());
 		testIsInEditModeHelper(Creature.InitStatus.ABILITIES);
-		if(!creature.validateInitStep()) {
+		if(!creature.validateModifStep()) {
 			fail("Something wrong happened, the basic ability scores should be valid");
 		}
 		viewModel.refresh();

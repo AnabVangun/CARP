@@ -74,4 +74,12 @@ public class CreatureViewModel implements ViewModel{
 	public ObservableIntegerValue getCurrentEditionPhase() {
 		return currentPhaseIndex.getReadOnlyProperty();
 	}
+	
+	/**
+	 * Asks the {@link Creature} object to validate the current modification 
+	 * step.
+	 */
+	protected void validateModificationStep() {
+		this.creature.validateModifStep();
+	}
 }
