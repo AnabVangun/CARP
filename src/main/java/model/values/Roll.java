@@ -14,12 +14,10 @@ import java.util.Random;
  */
 public class Roll {
 	/** Set of dice included in the roll. */
-	private Map<Integer, int[]> dice;
+	private Map<Integer, Integer[]> dice;
 	/** State of the dice: true when the dice have been rolled. */
 	private boolean rolled = false;
-	/**
-	 * RNG used for all the dice roll.
-	 */
+	/** RNG used for all the dice roll. */
 	private static Random rng = new Random();
 	
 	/**
@@ -29,8 +27,10 @@ public class Roll {
 	 * {@link ValueParameters#MAX_NUMBER_OF_SIDES} sides.
 	 * @param numberOfDice included in the set
 	 * @param numberOfSides of the dice in the set
+	 * @throws IllegalArgumentException	if the number of dice or sides is not 
+	 * valid.
 	 */
-	public Roll(int numberOfDice, int numberOfSides) {
+	public Roll(int numberOfDice, int numberOfSides) throws IllegalArgumentException{
 		if(numberOfDice < ValueParameters.MIN_NUMBER_OF_DICE 
 				|| numberOfSides < ValueParameters.MIN_NUMBER_OF_SIDES 
 				|| numberOfDice > ValueParameters.MAX_NUMBER_OF_DICE 
@@ -42,8 +42,8 @@ public class Roll {
 					+ " and " + ValueParameters.MAX_NUMBER_OF_SIDES + " sides (received " 
 					+ numberOfSides + ").");
 		}
-		dice = new HashMap<Integer, int[]>();
-		dice.put(numberOfSides, new int[numberOfDice]);
+		dice = new HashMap<>();
+		dice.put(numberOfSides, new Integer[numberOfDice]);
 	}
 	
 	/**
@@ -61,16 +61,14 @@ public class Roll {
 	}
 	
 	/**
-	 * Returns the results of the last roll of the dice set. Rolls the dice if
-	 * it had not been done yet.
-	 * @return an unmodifiable map with, for each number of sides, an array of 
+	 * Returns the results of the last roll of the dice set. The map will be 
+	 * updated when the dice are rolled again. All the array cells will be null
+	 * before the dice are rolled for the first time.
+	 * @return a read-only map with, for each number of sides, an array of 
 	 * the result of
 	 * the roll of each die.
 	 */
-	public Map<Integer, int[]> getResults(){
-		if(!rolled) {
-			roll();
-		}
+	public Map<Integer, Integer[]> getResults(){
 		return Collections.unmodifiableMap(this.dice);
 	}
 
@@ -102,7 +100,7 @@ public class Roll {
 	 */
 	private int computeScore() {
 		int result = 0;
-		for(int[] results : dice.values()) {
+		for(Integer[] results : dice.values()) {
 			for(int i:results) {
 				result += i;
 			}

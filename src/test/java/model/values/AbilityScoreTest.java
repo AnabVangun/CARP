@@ -1,22 +1,27 @@
 package model.values;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 public class AbilityScoreTest {
 
 	/**
 	 * Checks that {@link AbilityScore#computeModifier(int)} returns consistent
 	 * results for the scores from 0 to 23.
+	 * @param value		of the ability score.
+	 * @param modifier	expected modifier for the ability score.
 	 */
-	@Test
-	public void testComputeModifier() {
-		int[] modifiers = new int[] {-5, -5, -4, -4, -3, -3, -2, -2, -1, -1, 0,
-				0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6};
-		for(int i = 0; i < modifiers.length; i++) {
-			assertEquals("Modifiers must be conform to the rulebook",
-					modifiers[i], AbilityScore.computeModifier(i));
-		}
+	@ParameterizedTest(name = "Value {0} has modifier {1}")
+	@CsvSource({
+		"0, -5","1, -5","2, -4","3, -4","4, -3", "5, -3", "6, -2", "7, -2", 
+		"8, -1", "9, -1", "10, 0", "11, 0", "12, 1", "13, 1", "14, 2", "15, 2",
+		"16, 3", "17, 3", "18, 4", "19, 4", "20, 5", "21, 5", "22, 6", "23, 6"
+	})
+	public void computeModifier_verifyValidValues(int value, int modifier) {
+			assertEquals(modifier, 
+					AbilityScore.computeModifier(value),
+					"Modifiers must be conform to the rulebook");
 	}
 }
