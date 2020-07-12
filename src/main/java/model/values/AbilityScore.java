@@ -6,6 +6,11 @@ package model.values;
 /**
  * Read-only container for one of the six ability scores of a creature: 
  * Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma.
+ * Implementations of this interface MUST override 
+ * {@link Object#equals(Object)} and {@link Object#hashCode()} so that two 
+ * objects containing the same value are equals, undefined abilities are only
+ * equal to other undefined abilities, and equal abilities have the same 
+ * hashCode.
  * @author TLM
  */
 public interface AbilityScore extends Comparable<AbilityScore>{
@@ -40,4 +45,14 @@ public interface AbilityScore extends Comparable<AbilityScore>{
 	 */
 	public boolean isDefined();
 
+	@Override
+	public default int compareTo(AbilityScore o) {
+		//Undefined is worse than anything except undefined
+		if(!this.isDefined()) {
+			return o.isDefined() ? -1 : 0;
+		} else if (!o.isDefined()) {
+			return 1;
+		}
+		return this.getValue() - o.getValue();
+	}
 }

@@ -1,38 +1,29 @@
 package model.values;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class ValuesTest {
-	Value v;
-
-	@Before
-	public void setUp() throws Exception {
-		v = new Value(0);
-	}
 	/**
 	 * Checks that the results returned by {@link Value#getValue()} are consistent.
 	 */
-	@Test
-	public void testGetValue() {
-		//XXX When bonuses exist, take them into account.
-		assertEquals("A newly generated value must keep its argument as its total value", 0, v.getValue());
-		assertEquals("Negative values work", -5, new Value(-5).getValue());
-		assertEquals("Positive values work", 13, new Value(13).getValue());
+	@ParameterizedTest(name = "Test value {0}")
+	@ValueSource(ints = {-5, 0, 13})
+	public void getValue(int value) {
+		assertEquals(value, new Value(value).getValue());
 	}
 	
 	/**
 	 * Checks that {@link Value#setValue()} modifies the value.
 	 */
-	@Test
-	public void testSetValue() {
-		for (int i : new int[] {2, -3, 50}) {
-			v.setValue(i);
-			assertEquals("setValue modifies the value",
-					i,
+	@ParameterizedTest(name = "Test setValue({0})")
+	@ValueSource(ints = {-5, 0, 13})
+	public void setValue(int newValue) {
+		Value v = new Value(0);
+		v.setValue(newValue);
+		assertEquals(newValue,
 					v.getValue());
-		}
 	}
 }

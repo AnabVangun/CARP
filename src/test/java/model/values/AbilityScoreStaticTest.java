@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-public class AbilityScoreTest {
+public class AbilityScoreStaticTest {
 
 	/**
 	 * Checks that {@link AbilityScore#computeModifier(int)} returns consistent

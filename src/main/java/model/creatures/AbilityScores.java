@@ -304,14 +304,6 @@ class RWAbilityScores implements AbilityScores, CommittablePart<RWAbilityScores>
 			super(value == null ? 10 : value);
 			this.isDefined = value != null;
 		}
-		
-		/**
-		 * Basic constructor for an ability score that has not been defined.
-		 */
-		AbilityScoreType(){
-			super(10);
-			this.isDefined = false;
-		}
 
 		@Override
 		public int getModifier() {
@@ -345,19 +337,8 @@ class RWAbilityScores implements AbilityScores, CommittablePart<RWAbilityScores>
 		/**
 		 * Makes the ability score undefined.
 		 */
-		public void nullify() {
+		void nullify() {
 			this.isDefined = false;
-		}
-
-		@Override
-		public int compareTo(AbilityScore o) {
-			//Undefined is worse than anything except undefined
-			if(!this.isDefined()) {
-				return o.isDefined() ? -1 : 0;
-			} else if (!o.isDefined()) {
-				return 1;
-			}
-			return this.getValue() - o.getValue();
 		}
 		
 		@Override
