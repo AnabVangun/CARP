@@ -162,6 +162,16 @@ class ROAbilityScores implements AbilityScores{
 		return abilities.checkValidity();
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		return abilities.equals(o);
+	}
+	
+	@Override
+	public int hashCode() {
+		return abilities.hashCode();
+	}
+	
 }
 
 /**
@@ -412,5 +422,30 @@ class RWAbilityScores implements AbilityScores, CommittablePart<RWAbilityScores>
 		} else {
 			rejectInvalidAbilityScoreInput(errors);
 		}
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof AbilityScores)) {
+			return false;
+		} else {
+			for(AbilityName ability : AbilityName.values()) {
+				if(!this.getScore(ability).equals(((AbilityScores) o).getScore(ability))){
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		int multiplier = 31;
+		int result = 0;
+		for (Map.Entry<AbilityName, AbilityScore> entry : this) {
+			result = result * multiplier + 
+					(entry.getValue().isDefined() ? entry.getValue().getValue() : 0);
+		}
+		return result;
 	}
 }

@@ -5,22 +5,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import model.creatures.AbilityScores.InvalidityCode;
 import model.creatures.CreatureParameters.AbilityName;
 import model.values.AbilityScore;
 import model.values.AbilityScoreTestInterface;
 import model.values.ValueParameters;
 
-public class RWAbilityScoresTest implements AbilityScoreTestInterface, AbilityScoresTestInterface {
+public class RWAbilityScoresTest implements AbilityScoreTestInterface, AbilityScoresTestInterface, 
+CommittablePartTest<RWAbilityScores, RWAbilityScores> {
 
 	@Override
 	public AbilityScore createAbilityScore(Integer value, boolean isDefined) {
@@ -356,5 +361,74 @@ public class RWAbilityScoresTest implements AbilityScoreTestInterface, AbilitySc
 		@SuppressWarnings("unused")
 		RWAbilityScores newAbilities = new RWAbilityScores(oldAbilities);
 		checkNoSideEffect(values, oldAbilities, oldAbilities.getROAbilityScores(), null);
+	}
+
+	/**
+	 * Converts an array of {@link Arguments} objects each containing a text 
+	 * and a {@link RWAbilityScores} object into a map where the abilities are
+	 * indexed by their text description.
+	 * @param input
+	 * @return
+	 */
+	private Map<String, RWAbilityScores> objectFactory(Arguments[] input){
+		final int KEY = 0;
+		final int VALUE = 1;
+		Map<String, RWAbilityScores> result = new HashMap<>();
+		for(int i = 0; i < input.length; i++) {
+			result.put((String) input[i].get()[KEY], 
+					createAbilityScores((Map<AbilityName, Integer>) input[i].get()[VALUE]));
+		}
+		return result;
+	}
+	@Override
+	public Map<String, RWAbilityScores> validObjectFactory() {
+		return objectFactory(AbilityScoresTestInterface.validAbilityScoresParametersSupplier());
+	}
+	
+	@Override
+	public Map<String, RWAbilityScores> invalidObjectFactory(){
+		return objectFactory(AbilityScoresTestInterface.invalidAbilityScoresParametersSupplier());
+	}
+	
+	@Override
+	public Collection<CommitTestInput<RWAbilityScores, RWAbilityScores>> validCommitParameterFactory(){
+		Collection<CommitTestInput<RWAbilityScores, RWAbilityScores>> result = new ArrayList<>();
+		String description;
+		RWAbilityScores testObject;
+		RWAbilityScores commitArg;
+		description = "A full AbilityScores replaces a small one";
+		testObject = new RWAbilityScores((Map<AbilityName, Integer>) null);
+		int value = ValueParameters.MIN_ABILITY_SCORE;
+		int increment = (ValueParameters.MAX_ABILITY_SCORE - ValueParameters.MIN_ABILITY_SCORE) 
+				/ (AbilityName.values().length - 1);
+		for(AbilityName ability : AbilityName.values()) {
+			testObject.setAbilityScore(ability, value);
+			value += increment;
+		}
+		commitArg = new RWAbilityScores((Map<AbilityName, Integer>) null);
+		result.add(new CommitTestInput<>(description, testObject, commitArg));
+		description = "A small AbilityScores replaces a full one";
+		commitArg = new RWAbilityScores(testObject);
+		testObject = new RWAbilityScores((Map<AbilityName, Integer>) null);
+		value = ValueParameters.MIN_ABILITY_SCORE;
+		increment = (ValueParameters.MAX_ABILITY_SCORE - ValueParameters.MIN_ABILITY_SCORE) 
+				/ (AbilityScores.MANDATORY_ABILITIES.size() - 1);
+		for(AbilityName ability : AbilityScores.MANDATORY_ABILITIES) {
+			testObject.setAbilityScore(ability, value);
+			value += increment;
+		}
+		result.add(new CommitTestInput<>(description, testObject, commitArg));
+		return result;
+	}
+	
+	@Override
+	public void modifyTestObject(RWAbilityScores testObject) {
+		for(Map.Entry<AbilityName, AbilityScore> entry : testObject) {
+			if(entry.getValue().isDefined()) {
+				testObject.setAbilityScore(entry.getKey(), 
+						entry.getValue().getValue() 
+						+ (entry.getValue().getValue() == ValueParameters.MAX_ABILITY_SCORE ? -1 : 1));
+			}
+		}
 	}
 }

@@ -3,6 +3,8 @@ package model.creatures;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,7 +59,7 @@ public interface AbilityScoresTestInterface {
 		int index = 0;
 		int value = ValueParameters.MIN_ABILITY_SCORE;
 		int increment = (ValueParameters.MAX_ABILITY_SCORE - ValueParameters.MIN_ABILITY_SCORE) 
-				/ AbilityName.values().length;
+				/ (AbilityName.values().length - 1);
 		for(AbilityName ability : AbilityName.values()) {
 			valueMaps[index].put(ability, value);
 			value += increment;
@@ -67,7 +69,7 @@ public interface AbilityScoresTestInterface {
 		index = 1;
 		value = ValueParameters.MIN_ABILITY_SCORE;
 		increment = (ValueParameters.MAX_ABILITY_SCORE - ValueParameters.MIN_ABILITY_SCORE)
-				/ AbilityScores.MANDATORY_ABILITIES.size();
+				/ (AbilityScores.MANDATORY_ABILITIES.size() - 1);
 		for(AbilityName ability : AbilityScores.MANDATORY_ABILITIES) {
 			valueMaps[index].put(ability, value);
 			value += increment;
@@ -322,164 +324,83 @@ public interface AbilityScoresTestInterface {
 		assertAll(Arrays.stream(AbilityName.values()).map(
 				(ability) -> testerFactory.apply(ability)));
 	}
+	
+	/**
+	 * Checks that {@link AbilityScores#equals(Object)} returns true on two
+	 * objects containing the same values.
+	 * @param testCase	description of the test case
+	 * @param values	map of the values used to initialise the 
+	 * {@link AbilityScores} object.
+	 * @param error		map of the {@link InvalidityCode} corresponding to the
+	 * values.
+	 */
+	@ParameterizedTest(name = "abilityScores equals: case true on {0}")
+	@MethodSource({VALID_ABILITY_SCORES, INVALID_ABILITY_SCORES})
+	default void equals_true(String testCase, 
+			Map<AbilityName, Integer> values, Map<AbilityName, InvalidityCode> error) {
+		assertAll(
+				()->assertEquals(createAbilityScores(values), createAbilityScores(values)),
+				()->assertEquals(createAbilityScores(values).hashCode(), createAbilityScores(values).hashCode()));
+	}
+	/**
+	 * Checks that {@link AbilityScores#equals(Object)} returns false on two
+	 * objects containing different values.
+	 * @param testCase	description of the test case
+	 * @param values	map of the values used to initialise the 
+	 * {@link AbilityScores} object.
+	 * @param error		map of the {@link InvalidityCode} corresponding to the
+	 * values.
+	 */
+	@ParameterizedTest(name = "abilityScores equals: case false (values modified) on {0}")
+	@MethodSource({VALID_ABILITY_SCORES, INVALID_ABILITY_SCORES})
+	default void equals_falseIncrement(String testCase, 
+			Map<AbilityName, Integer> values, Map<AbilityName, InvalidityCode> error) {
+		assumeFalse(values.isEmpty(), "Empty ability scores cannot be modified just a bit");
+		AbilityScores first = createAbilityScores(values);
+		values.forEach((key, value) 
+				-> values.put(key, value 
+							+ (value == ValueParameters.MAX_ABILITY_SCORE ? -1 : 1)));
+		assertNotEquals(first, createAbilityScores(values));
+	}
+	/**
+	 * Checks that {@link AbilityScores#equals(Object)} returns false on two
+	 * objects containing different values.
+	 * @param testCase	description of the test case
+	 * @param values	map of the values used to initialise the 
+	 * {@link AbilityScores} object.
+	 * @param error		map of the {@link InvalidityCode} corresponding to the
+	 * values.
+	 */
+	@ParameterizedTest(name = "abilityScores equals: case false (missing ability) on {0}")
+	@MethodSource({VALID_ABILITY_SCORES, INVALID_ABILITY_SCORES})
+	default void equals_falseMoreAbilities(String testCase, 
+			Map<AbilityName, Integer> values, Map<AbilityName, InvalidityCode> error) {
+		assumeFalse(values.isEmpty(), "Cannot remove abilities from an empty map");
+		AbilityScores first = createAbilityScores(values);
+		for(AbilityName ability : values.keySet()) {
+			values.remove(ability);
+			break;
+		}
+		AbilityScores second = createAbilityScores(values);
+		assertAll(
+				() -> assertNotEquals(first, second),
+				() -> assertNotEquals(second, first));
+	}
+	/**
+	 * Checks that {@link AbilityScores#equals(Object)} returns false when the
+	 * argument is an {@link AbilityScore} object contained in it.
+	 * @param testCase	description of the test case
+	 * @param values	map of the values used to initialise the 
+	 * {@link AbilityScores} object.
+	 * @param error		map of the {@link InvalidityCode} corresponding to the
+	 * values.
+	 */
+	@ParameterizedTest(name = "abilityScores equals: case false (comparison with ability score) on {0}")
+	@MethodSource({VALID_ABILITY_SCORES, INVALID_ABILITY_SCORES})
+	default void equals_abilityScore(String testCase, 
+			Map<AbilityName, Integer> values, Map<AbilityName, InvalidityCode> error) {
+		AbilityScores abilities = createAbilityScores(values);
+		assertAll(Arrays.stream(AbilityName.values()).map(ability
+				-> () -> assertNotEquals(abilities, abilities.getScore(ability))));
+	}
 }
-
-//FIXME delete this when finished
-//	/**
-//	 * Checks that {@link RWAbilityScores#RWAbilityScores(AbilityScores)} 
-//	 * returns a {@link RWAbilityScores} object that is a deep copy of the 
-//	 * input {@link AbilityScores} object.
-//	 */
-//	@Test
-//	public void testDeepCopyConstructor() {
-//		//Generate an input for the AbilityScores constructor
-//		EnumMap<AbilityName, Integer> abilities = basicAbilityScores();
-//		//Generate a RW and a RO AbilityScores
-//		AbilityScores rwTest = new RWAbilityScores(abilities);
-//		AbilityScores roTest = ((RWAbilityScores) rwTest).getROAbilityScores();
-//		testDeepCopyConstructorHelper(rwTest);
-//		testDeepCopyConstructorHelper(roTest);
-//		//Go again after removing non-mandatory abilities
-//		for (AbilityName name : AbilityName.values()) {
-//			if(!AbilityScores.MANDATORY_ABILITIES.contains(name)) {
-//				abilities.remove(name);
-//			}
-//		}
-//		rwTest = new RWAbilityScores(abilities);
-//		roTest = ((RWAbilityScores) rwTest).getROAbilityScores();
-//		testDeepCopyConstructorHelper(rwTest);
-//		testDeepCopyConstructorHelper(roTest);
-//	}
-//
-//	/**
-//	 * Checks that the copy constructor indeed makes a deep copy of the input
-//	 * {@link AbilityScores} object.
-//	 * @param input	an initialised {@link AbilityScores} object.
-//	 * @throws AssertionError	if one of the sub-tests fails.
-//	 */
-//	private void testDeepCopyConstructorHelper(AbilityScores input) {
-//		AbilityScores test = new RWAbilityScores(input);
-//		//Define how to check in one way
-//		Consumer<AbilityScores> oneWayChecker = new Consumer<AbilityScores>() {
-//			@Override
-//			public void accept(AbilityScores t) {
-//				//iterate over the entries of one object
-//				for(Map.Entry<AbilityName, AbilityScore> entry : t) {
-//					//If a value is null in one of the AbilityScores, it must be so in the other
-//					assertTrue("An AbilityScore must be null in none or both the AbilityScores",
-//							(input.getScore(entry.getKey()) == null && test.getScore(entry.getKey()) == null)
-//							||(input.getScore(entry.getKey()) != null && test.getScore(entry.getKey()) != null));
-//					if(input.getScore(entry.getKey()) != null) {
-//						assertNotSame("The copy must be a deep copy", 
-//								input.getScore(entry.getKey()), test.getScore(entry.getKey()));
-//					}
-//				}
-//			}
-//		};
-//		//Check both ways to make sure no AbilityScore is missed.
-//		oneWayChecker.accept(input);
-//		oneWayChecker.accept(test);
-//	}
-//	
-//	/**
-//	 * Checks that:
-//	 * 1. commit before prepareCommit fails
-//	 * 2. prepareCommit fails if invalid values are present
-//	 * 3. prepareCommit if the object is valid
-//	 * 4. commit fails if a modification was made after the last prepareCommit
-//	 * 5. commit succeeds if prepareCommit has succeeded
-//	 */
-//	@Test
-//	public void testCommit() {
-//		RWAbilityScores committedScores = new RWAbilityScores(basicAbilityScores());
-//		RWAbilityScores replacedScores = new RWAbilityScores((Map<AbilityName, Integer>) null);
-//		if(!committedScores.checkValidity().isEmpty()) {
-//			fail("This test assumes that basicAbilityScores initialises a valid set of scores");
-//		}
-//		try {
-//			committedScores.commit(replacedScores);
-//			fail("A commit before a prepareCommit should fail");
-//		} catch (IllegalStateException e) {}
-//		//Check for different types of invalidity that all fail
-//		try {
-//			replacedScores.prepareCommit();
-//			fail("An invalid abilityScores should fail to prepare");
-//		} catch (IllegalStateException e) {};
-//		//Add missing abilities, set invalid values
-//		int i = 0;
-//		for(AbilityName ability : AbilityName.values()) {
-//			int value;
-//			if(AbilityScores.MANDATORY_ABILITIES.contains(ability)) {
-//				value = 10;
-//			} else {
-//				value = (i % 2 == 0 
-//						? ValueParameters.MIN_ABILITY_SCORE - i - 1 
-//						: ValueParameters.MAX_ABILITY_SCORE + i);
-//				i++;
-//			}
-//			replacedScores.setAbilityScore(ability, value);
-//		}
-//		try {
-//			replacedScores.prepareCommit();
-//			fail("An invalid abilityScores should fail to prepare");
-//		} catch (IllegalStateException e) {};
-//		//Verify that if a modification occurs between prepare and commit, commit fails
-//		committedScores.prepareCommit();
-//		committedScores.setAbilityScore(AbilityName.STRENGTH, 2);
-//		try {
-//			committedScores.commit(replacedScores);
-//			fail("A commit before a prepareCommit should fail");
-//		} catch (IllegalStateException e) {}
-//		//Check that prepare commit succeeds on valid scores
-//		committedScores.prepareCommit();
-//		committedScores.commit(replacedScores);
-//		//Verify that commit has succeeded
-//		for(AbilityName ability: AbilityName.values()) {
-//			assertEquals("After a commit, the replaced object must be equal to the committed one",
-//					committedScores.getScore(ability).isDefined(), 
-//					replacedScores.getScore(ability).isDefined());
-//			if(committedScores.getScore(ability).isDefined()) {
-//				assertEquals("After a commit, the replaced object must be equal to the committed one",
-//						committedScores.getScore(ability).getValue(),
-//						replacedScores.getScore(ability).getValue());
-//			}
-//		}
-//	}
-//	/**
-//	 * Checks that compareTo between two ability scores contained by an 
-//	 * AbilityScores object is consistent with natural ordering and that 
-//	 * undefined value are worse than any other value.
-//	 */
-//	@Test
-//	public void testCompareTo() {
-//		BiConsumer<Integer, Integer> assertSameSign = (a, b) -> {
-//			assertTrue(a + " and " + b + " should have the same sign",
-//					(a == 0 && b == 0) ||
-//					(a < 0 && b < 0) ||
-//					(a > 0 && b > 0)
-//					);
-//		};
-//		AbilityScores abilities = AbilityScores.create(AbilityScoresTestInterface.basicAbilityScores());
-//		for (AbilityName ability1 : AbilityName.values()) {
-//			for (AbilityName ability2 : AbilityName.values()) {
-//				//Compare ability is consistent with compare value of ability
-//				assertSameSign.accept(abilities.getScore(ability1)
-//						.compareTo(abilities.getScore(ability2)),
-//						((Integer) abilities.getScore(ability1).getValue())
-//						.compareTo(abilities.getScore(ability2).getValue()));
-//				//Compare ability is asymetric
-//				assertSameSign.accept(abilities.getScore(ability1)
-//						.compareTo(abilities.getScore(ability2)),
-//						-abilities.getScore(ability2)
-//						.compareTo(abilities.getScore(ability1)));
-//			}
-//			AbilityScores nullAbility = AbilityScores.create(null);
-//			int comparison = abilities.getScore(ability1)
-//					.compareTo(nullAbility.getScore(ability1));
-//			assertTrue(comparison + " must be greater than zero", comparison > 0);
-//			comparison = nullAbility.getScore(ability1)
-//					.compareTo(abilities.getScore(ability1));
-//			assertTrue(comparison + " must be less than zero", comparison < 0);
-//		}
-//	}
-//}
