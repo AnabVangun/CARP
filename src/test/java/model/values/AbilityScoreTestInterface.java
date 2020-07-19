@@ -1,95 +1,139 @@
 package model.values;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
+
+import tools.TestFrameWork;
 
 /**
  * Interface verifying that a class implementing the {@link AbilityScore} 
  * interface respects the contracts set by the method descriptions.
  * @author TLM
  */
-public interface AbilityScoreTestInterface {
+public interface AbilityScoreTestInterface<T extends AbilityScoreArgument> 
+extends TestFrameWork<AbilityScore, T>{
 	/**
 	 * Generates an {@link AbilityScore} object to run the tests.
 	 * @param value		to store in the ability
 	 * @param isDefined	true if the new ability must be defined.
 	 * @return	an {@link AbilityScore} object storing the input value.
 	 */
-	AbilityScore createAbilityScore(Integer value, boolean isDefined);
-	
-	static Arguments[] abilityScoreParametersSupplier() {
-		return new Arguments[] {Arguments.of(5, true),
-				Arguments.of(15, true),
-				Arguments.of(5, false),
-				Arguments.of(25, false),
-				Arguments.of(ValueParameters.MIN_ABILITY_SCORE - 3, true),
-				Arguments.of(ValueParameters.MAX_ABILITY_SCORE + 6, true)
-		};
+	T createAbilityScoreArgument(Integer value, boolean isDefined);
+
+	@Override
+	default Stream<T> argumentsSupplier() {
+		return Stream.of(createAbilityScoreArgument(5, true),
+				createAbilityScoreArgument(15, true),
+				createAbilityScoreArgument(5, false),
+				createAbilityScoreArgument(25, false),
+				createAbilityScoreArgument(ValueParameters.MIN_ABILITY_SCORE - 3, true),
+				createAbilityScoreArgument(ValueParameters.MAX_ABILITY_SCORE + 6, true));
 	}
 	
-	static Arguments[] differentAbilityScoreParametersSupplier() {
-		return new Arguments [] {Arguments.of(1, true, 5),
-				Arguments.of(15, true, 18),
-				Arguments.of(ValueParameters.MIN_ABILITY_SCORE, true, ValueParameters.MAX_ABILITY_SCORE),
-				Arguments.of(5, false, 3),
-				Arguments.of(ValueParameters.MAX_ABILITY_SCORE + 4, false, ValueParameters.MIN_ABILITY_SCORE - 7),
-				Arguments.of(ValueParameters.MIN_ABILITY_SCORE - 2, true, 10),
-				Arguments.of(ValueParameters.MIN_ABILITY_SCORE - 13, true, ValueParameters.MAX_ABILITY_SCORE + 2)};
+	default Map<T, T> differentAbilityScoreParametersSupplier() {
+		Map<T, T> result = new HashMap<>();
+		result.put(createAbilityScoreArgument(1, true), createAbilityScoreArgument(5, true));
+		result.put(createAbilityScoreArgument(15, true), createAbilityScoreArgument(18, true));
+		result.put(createAbilityScoreArgument(ValueParameters.MIN_ABILITY_SCORE, true), 
+				createAbilityScoreArgument(ValueParameters.MAX_ABILITY_SCORE, true));
+		result.put(createAbilityScoreArgument(5, false), createAbilityScoreArgument(3, true));
+		result.put(createAbilityScoreArgument(ValueParameters.MAX_ABILITY_SCORE + 4, false), 
+				createAbilityScoreArgument(ValueParameters.MIN_ABILITY_SCORE - 7, true));
+		result.put(createAbilityScoreArgument(ValueParameters.MIN_ABILITY_SCORE - 2, true), 
+				createAbilityScoreArgument(10, true));
+		result.put(createAbilityScoreArgument(ValueParameters.MIN_ABILITY_SCORE - 13, true), 
+				createAbilityScoreArgument(ValueParameters.MAX_ABILITY_SCORE + 2, true));
+		return result;
+	}
+	
+	@Override
+	default String testName(String method, T first) {
+		return testName(method, first, null, null);
+	}
+	
+	default String testName(String method, T first, T second) {
+		return testName(method, first, second, null);
+	}
+	/**
+	 * Forges the name of the test case based on one to three 
+	 * {@link AbilityScore} objects.
+	 * @param method	under test
+	 * @param args		the one to three arguments to build the corresponding
+	 * {@link AbilityScore} objects.
+	 * @return	a String containing the name of the test and the description of
+	 * the {@link AbilityScore} object used for the test.
+	 */
+	default String testName(String method, T first, T second, T third) {
+		if(first != null && second == null && third == null) {
+			return String.format("AbilityScore.%s on value %s", method, first);
+		} else if (first != null && second != null && third == null) {
+			return String.format("AbilityScore.%s on values %s and %s", 
+					method, first, second); 
+		} else if (first != null && second != null && third != null) {
+			return String.format("AbilityScore.%s on values %s, %s and %s", method, first, second, third);
+		} else {
+			throw new IllegalArgumentException(String.format("This method received %s, %s and %s",
+					first, second, third));
+		}
 	}
 	
 	/**
 	 * Checks that {@link AbilityScore#isDefined()} returns true if and only if
 	 * the ability is properly defined.
-	 * @param value		valid value for an ability
-	 * @param isDefined	true if the ability is expected to be defined
 	 */
-	@ParameterizedTest(name = "Is defined on value {0}, defined {1}")
-	@MethodSource("abilityScoreParametersSupplier")
-	default void isDefined_verifyValue(Integer value, boolean isDefined) {
-		assertEquals(isDefined, createAbilityScore(value, isDefined).isDefined());
+	@TestFactory
+	default Stream<DynamicTest> isDefined_verifyValue() {
+		return test("isDefined()", args
+				-> assertEquals(args.isDefined, args.convert().isDefined()));
 	}
-	
 	/**
 	 * Checks that {@link AbilityScore#getValue()} returns the value of the
 	 * ability if it is properly defined, or throws an exception otherwise.
-	 * @param value
-	 * @param isDefined
 	 */
-	@ParameterizedTest(name = "Get value on value {0}, defined {1}")
-	@MethodSource("abilityScoreParametersSupplier")
-	default void getValue_VerifyValue(Integer value, boolean isDefined) {
-		AbilityScore ability = createAbilityScore(value, isDefined);
+	@TestFactory
+	default Stream<DynamicTest> getValue_VerifyValue() {
+		return test("getValue()", args
+				-> getValue_VerifyValue_AssertSwitch(args.isDefined, args.convert(), args.value));
+	}
+	/**
+	 * Checks that {@link AbilityScore#getValue()} returns the value of the
+	 * ability if it is properly defined, or throws an exception otherwise.
+	 * @param isDefined	true if the ability is supposed not to be defined
+	 * @param ability	ability to test
+	 * @param value		expected value if the ability is defined
+	 */
+	default void getValue_VerifyValue_AssertSwitch(boolean isDefined, AbilityScore ability, Integer value) {
 		if(isDefined) {
 			assertEquals(value, ability.getValue());
 		} else {
 			assertThrows(UnsupportedOperationException.class, () -> ability.getValue());
 		}
 	}
-
 	/**
 	 * Checks that {@link AbilityScore#getModifier()} computes the modifier of 
 	 * the ability as per {@link AbilityScore#computeModifier(int)} if the 
 	 * ability is properly defined.
-	 * @param value
-	 * @param isDefined
 	 */
-	@ParameterizedTest(name = "Get modifier on value {0}, defined {1}")
-	@MethodSource("abilityScoreParametersSupplier")
-	default void getModifier_VerifyValue(Integer value, boolean isDefined) {
-		AbilityScore ability = createAbilityScore(value, isDefined);
-		assertEquals(isDefined?AbilityScore.computeModifier(value):0,
-				ability.getModifier());
+	@TestFactory
+	default Stream<DynamicTest> getModifier_VerifyValue() {
+		return test("getModifier()", args
+				-> assertEquals(args.isDefined?AbilityScore.computeModifier(args.value):0,
+						args.convert().getModifier()));
 	}
-	
 	/**
 	 * Checks that {@link AbilityScore#compareTo(AbilityScore)} is <0 if
 	 * the object is strictly lower than the argument, and >0 if it is
@@ -98,127 +142,151 @@ public interface AbilityScoreTestInterface {
 	 * based on the natural order of the values of the ability scores with
 	 * undefined abilities being considered as "MIN_ABILITY_SCORE - 1", 
 	 * transitivity is ensured as long as this test succeeds.
-	 * @param value1		Value of the first ability score.
-	 * @param isDefined1	Whether the first ability score is defined
-	 * @param value2		Value of the second ability score, which must be 
-	 * higher than the first.
 	 */
-	@ParameterizedTest(name = "Compare {0} (defined: {1}) and {2} (defined: true)")
-	@MethodSource("differentAbilityScoreParametersSupplier")
-	default void compareTo_verifySignOnDifferentValues(Integer value1, boolean isDefined1,
-			Integer value2) {
-		AbilityScore lesser = createAbilityScore(value1, isDefined1);
-		AbilityScore higher = createAbilityScore(value2, true);
-		assertAll(() -> assertTrue(lesser.compareTo(higher) < 0, 
-						() -> "Expected negative value, received " + lesser.compareTo(higher)),
-				() -> assertTrue(higher.compareTo(lesser) > 0,
-						() -> "Expected positive value, received " + higher.compareTo(lesser))
-				);
+	@TestFactory
+	default Stream<DynamicNode> compareTo_verifySignOnDifferentValues() {
+		return differentAbilityScoreParametersSupplier().entrySet().stream().map(entry 
+				-> compareTo_verifySignOnDifferentValues(
+						entry.getKey(), entry.getValue()));
 	}
-	
 	/**
-	 * Checks that {@link AbilityScore#compareTo(AbilityScore)} is ==0 if the 
-	 * object is equal to the argument, considering that undefined
-	 * abilities are equal independently of their values. Also checks that
+	 * Checks that {@link AbilityScore#compareTo(AbilityScore)} is <0 if
+	 * the object is strictly lower than the argument, and >0 if it is
+	 * strictly higher than the argument, considering that an undefined
+	 * ability is lower than any defined ability.
+	 * @param lesserArg	the arguments for the lesser {@link AbilityScore}
+	 * @param higherArg	the arguments for the higher {@link AbilityScore}
+	 * @return a container checking that 
+	 * {@link AbilityScore#compareTo(AbilityScore)} returns the expected 
+	 * result.
+	 */
+	default DynamicNode compareTo_verifySignOnDifferentValues(T lesserArg, 
+			T higherArg) {
+		String message = testName("compareTo", lesserArg, higherArg);
+		AbilityScore lesser = lesserArg.convert();
+		AbilityScore higher = higherArg.convert();
+		return dynamicContainer(message, Stream.of(
+				dynamicTest(message + ": lesser < higher", () -> assertTrue(lesser.compareTo(higher) < 0, 
+						() -> "Expected negative value, received " + lesser.compareTo(higher))),
+				dynamicTest(message + ": higher > lesser", () -> assertTrue(higher.compareTo(lesser) > 0,
+						() -> "Expected positive value, received " + higher.compareTo(lesser)))));
+	}
+	/**
+	 * Checks that {@link AbilityScore#compareTo(AbilityScore)} == 0 if the 
+	 * object is equal to the argument and that
 	 * if two abilities are equal, the results of their comparison with a third
 	 * ability have the same sign.
-	 * @param value1		Value of the first ability score.
-	 * @param isDefined		Whether the first two abilities are defined.
-	 * @param value2		Value of the second ability score. Expected to be
-	 * equal to value1, unless isDefined is false.
-	 * @param value3		Value of the third ability score.
-	 * @param isDefined3	Whether the third ability score is defined.
+	 * @return	a stream of unit tests each containing one assertion.
 	 */
-	@ParameterizedTest(name = "Comparison equality between {0} and {2} (defined: {1}) and"
-			+ " comparison with {3} (defined {4})")
-	@CsvSource({"2, true, 2, 6, true", "13, true, 13, 5, true", "10, true, 10, 10, true",
-		"4, true, 4, 7, false", "5, false, 23, 4, false"})
-	default void compareTo_Equality(Integer value1, boolean isDefined,
-			Integer value2, Integer value3, boolean isDefined3) {
-		AbilityScore first = createAbilityScore(value1, isDefined);
-		AbilityScore second = createAbilityScore(value2, isDefined);
-		AbilityScore third = createAbilityScore(value3, isDefined3);
-		assertAll(() -> assertEquals(0, first.compareTo(second)),
-				() -> assertEquals(0, second.compareTo(first)),
-				() -> {
-					if(first.compareTo(third) == 0) {
-						assertEquals(0, second.compareTo(third));
-					} else {
-						assertTrue(first.compareTo(third) * second.compareTo(third) > 0,
-								() -> first.compareTo(third) + " and " + second.compareTo(third) 
-								+ " should have the same sign");
-					}
-				});
+	@TestFactory
+	default Stream<DynamicNode> compareTo_Equality() {
+		Stream<Stream<T>> args = Stream.of(
+				Stream.of(createAbilityScoreArgument(2, true), 
+						createAbilityScoreArgument(2, true), 
+						createAbilityScoreArgument(6, true)),
+				Stream.of(createAbilityScoreArgument(13, true), 
+						createAbilityScoreArgument(13, true), 
+						createAbilityScoreArgument(5, true)),
+				Stream.of(createAbilityScoreArgument(10, true), 
+						createAbilityScoreArgument(10, true), 
+						createAbilityScoreArgument(10, true)),
+				Stream.of(createAbilityScoreArgument(4, true), 
+						createAbilityScoreArgument(4, true), 
+						createAbilityScoreArgument(7, false)),
+				Stream.of(createAbilityScoreArgument(5, false), 
+						createAbilityScoreArgument(23, false), 
+						createAbilityScoreArgument(4, false))
+				);
+		/*
+		 * XXX find a nicer way to bypass the inability to create T[].
+		 */
+		return args.map(stream -> {
+			Iterator<T> iter = stream.iterator();
+			return compareTo_Equality(iter.next(), iter.next(), iter.next());
+		});
+	}
+
+	/**
+	 * Checks that {@link AbilityScore#compareTo(AbilityScore)} == 0 if the 
+	 * object is equal to the argument and that
+	 * if two abilities are equal, the results of their comparison with a third
+	 * ability have the same sign.
+	 * @param args	the three abilities to compare. The first two are supposed
+	 * to be equal as far as {@link AbilityScore#compareTo(AbilityScore)} is 
+	 * concerned.
+	 * @return a stream of unit tests each containing one assertion.
+	 */
+	default DynamicNode compareTo_Equality(T firstArg, T secondArg, T thirdArg) {
+		String name = testName("compareTo (equality)", firstArg, secondArg, thirdArg);
+		AbilityScore first = firstArg.convert();
+		AbilityScore second = secondArg.convert();
+		AbilityScore third = thirdArg.convert();
+		return dynamicContainer(name, Stream.of(
+				dynamicTest(name + ": a equals b", () -> assertEquals(0, first.compareTo(second))),
+				dynamicTest(name + ": b equals a", () -> assertEquals(0, second.compareTo(first))),
+				dynamicTest(name + ": a equals b so a.compareTo(c)~b.compareTo(c)",
+						() -> {
+							if(first.compareTo(third) == 0) {
+								assertEquals(0, second.compareTo(third));
+							} else {
+								assertTrue(first.compareTo(third) * second.compareTo(third) > 0,
+										() -> first.compareTo(third) + " and " + second.compareTo(third) 
+										+ " should have the same sign");
+								}
+						}
+							)));
 	}
 	/**
 	 * Checks that {@link AbilityScore#equals(Object)} return true when used on
 	 * two objects containing the same value with the same definition status.
-	 * @param value
-	 * @param isDefined
 	 */
-	@ParameterizedTest(name = "Equality on {0} (defined {1})")
-	@MethodSource("abilityScoreParametersSupplier")
-	default void equality_Equality(Integer value, boolean isDefined) {
-		AbilityScore first = createAbilityScore(value, isDefined);
-		AbilityScore second = createAbilityScore(value, isDefined);
-		assertEquals(first, second);
+	@TestFactory
+	default Stream<DynamicTest> equality_Equality() {
+		return test("equals() (equality case)", input
+				-> assertEquals(input.convert(),
+						input.convert()));
 	}
 	/**
 	 * Checks that {@link AbilityScore#equals(Object)} return false when used 
 	 * on two objects containing different values or with different definition 
 	 * status.
-	 * @param value1		Value of the first ability score.
-	 * @param isDefined1	Whether the first ability score is defined
-	 * @param value2		Value of the second ability score, which must be 
-	 * higher than the first.
 	 */
-	@ParameterizedTest(name = "Equality between {0} (defined: {1}) and {2}")
-	@MethodSource("differentAbilityScoreParametersSupplier")
-	default void equality_Difference(Integer value1, boolean isDefined1,
-			Integer value2) {
-		AbilityScore first = createAbilityScore(value1, isDefined1);
-		AbilityScore second = createAbilityScore(value2, true);
-		assertNotEquals(first, second);
+	@TestFactory
+	default Stream<DynamicTest> equality_Difference() {
+		return differentAbilityScoreParametersSupplier().entrySet().stream().map(entry
+				-> dynamicTest(testName("equals (difference case)", entry.getKey(), entry.getValue()),
+						() -> assertNotEquals(entry.getKey().convert(),
+								entry.getValue().convert())));
 	}
 	/**
 	 * Checks that {@link AbilityScore#equals(Object)} return false when its
 	 * input is an integer and not an {@link AbilityScore}.
-	 * @param value
-	 * @param isDefined
 	 */
 	@SuppressWarnings("unlikely-arg-type")
-	@ParameterizedTest(name = "Equality (difference) on {0} (defined {1})")
-	@MethodSource("abilityScoreParametersSupplier")
-	default void equality_NotAnAbility(Integer value, boolean isDefined) {
-		AbilityScore first = createAbilityScore(value, isDefined);
-		Integer second = isDefined ? value : null;
-		assertFalse(first.equals(second));
+	@TestFactory
+	default Stream<DynamicTest> equality_NotAnAbility() {
+		return test("equals() (heterogeneous case)", args
+				-> assertFalse(args.convert().equals(args.isDefined ? args.value : null)));
 	}
 	/**
 	 * Checks that {@link AbilityScore#hashCode()} return the same result when 
 	 * used several times on the same object.
-	 * @param value
-	 * @param isDefined
 	 */
-	@ParameterizedTest(name = "Equality on {0} (defined {1})")
-	@MethodSource("abilityScoreParametersSupplier")
-	default void hashCode_consistentResult(Integer value, boolean isDefined) {
-		AbilityScore score = createAbilityScore(value, isDefined);
-		int first = score.hashCode();
-		int second = score.hashCode();
-		assertEquals(first, second);
+	@TestFactory
+	default Stream<DynamicTest> hashCode_consistentResult() {
+		return test("hashCode() (consistent results)", args
+				-> {
+					AbilityScore score = args.convert();
+					assertEquals(score.hashCode(), score.hashCode());
+		});
 	}
 	/**
 	 * Checks that {@link AbilityScore#hashCode()} return the same result when 
 	 * used on two equal {@link AbilityScore}.
-	 * @param value
-	 * @param isDefined
 	 */
-	@ParameterizedTest(name = "Equality on {0} (defined {1})")
-	@MethodSource("abilityScoreParametersSupplier")
-	default void hashCode_Equality(Integer value, boolean isDefined) {
-		AbilityScore first = createAbilityScore(value, isDefined);
-		AbilityScore second = createAbilityScore(value, isDefined);
-		assertEquals(first.hashCode(), second.hashCode());
+	@TestFactory
+	default Stream<DynamicTest> hashCode_Equality() {
+		return test("hashCode() (equality)", args
+				-> assertEquals(args.convert().hashCode(), args.convert().hashCode()));
 	}
 }

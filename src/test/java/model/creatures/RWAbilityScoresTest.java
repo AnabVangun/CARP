@@ -21,27 +21,21 @@ import org.junit.jupiter.params.provider.MethodSource;
 import model.creatures.AbilityScores.InvalidityCode;
 import model.creatures.CreatureParameters.AbilityName;
 import model.values.AbilityScore;
+import model.values.AbilityScoreArgument;
 import model.values.AbilityScoreTestInterface;
 import model.values.ValueParameters;
 
-public class RWAbilityScoresTest implements AbilityScoreTestInterface, AbilityScoresTestInterface, 
-CommittablePartTest<RWAbilityScores, RWAbilityScores> {
-
-	@Override
-	public AbilityScore createAbilityScore(Integer value, boolean isDefined) {
-		RWAbilityScores builder = new RWAbilityScores((Map<AbilityName, Integer>) null);
-		AbilityName ability = AbilityName.values()[((value % AbilityName.values().length) 
-				+ AbilityName.values().length) % AbilityName.values().length];
-		builder.setAbilityScore(ability, value);
-		if(!isDefined) {
-			builder.setAbilityScore(ability, null);
-		}
-		return builder.getScore(ability);
-	}
+public class RWAbilityScoresTest implements AbilityScoreTestInterface<RWAbilityScoreArgument>, 
+AbilityScoresTestInterface, CommittablePartTest<RWAbilityScores, RWAbilityScores> {
 
 	@Override
 	public RWAbilityScores createAbilityScores(Map<AbilityName, Integer> values) {
 		return new RWAbilityScores(values);
+	}
+	
+	@Override
+	public RWAbilityScoreArgument createAbilityScoreArgument(Integer value, boolean isDefined) {
+		return new RWAbilityScoreArgument(value, isDefined);
 	}
 	
 	/**
@@ -430,5 +424,22 @@ CommittablePartTest<RWAbilityScores, RWAbilityScores> {
 						+ (entry.getValue().getValue() == ValueParameters.MAX_ABILITY_SCORE ? -1 : 1));
 			}
 		}
+	}
+}
+class RWAbilityScoreArgument extends AbilityScoreArgument{
+	RWAbilityScoreArgument(Integer value, boolean isDefined) {
+		super(value, isDefined);
+	}
+
+	@Override
+	public AbilityScore convert() {
+		RWAbilityScores builder = new RWAbilityScores((Map<AbilityName, Integer>) null);
+		AbilityName ability = AbilityName.values()[((value % AbilityName.values().length) 
+				+ AbilityName.values().length) % AbilityName.values().length];
+		builder.setAbilityScore(ability, value);
+		if(!isDefined) {
+			builder.setAbilityScore(ability, null);
+		}
+		return builder.getScore(ability);
 	}
 }
