@@ -4,24 +4,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
+import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-
+import org.junit.jupiter.api.TestFactory;
 import model.creatures.AbilityScores.InvalidityCode;
 import model.creatures.CreatureParameters.AbilityName;
+import tools.TestArguments;
+import tools.TestFrameWork;
 
-public class AbilityScoresStaticTest implements AbilityScoresTestInterface{
-
-	/**
-	 * Checks that {@link AbilityScores#create(Map)} returns a properly built
-	 * {@link AbilityScores} object by running all the tests from 
-	 * {@link AbilityScoresTestInterface} on it.
-	 */
+public class AbilityScoresStaticTest implements AbilityScoresTestInterface<StaticAbilityScoresArguments>, 
+TestFrameWork<AbilityScores, StaticAbilityScoresArguments>{
 	@Override
-	public AbilityScores createAbilityScores(Map<AbilityName, Integer> values) {
-		return AbilityScores.create(values);
+	public String testName(String methodName, StaticAbilityScoresArguments args) {
+		return testName(AbilityScores.class.getSimpleName(), methodName, args);
+	}
+
+	@Override
+	public StaticAbilityScoresArguments createAbilityScoresArguments(String description,
+			Map<AbilityName, Integer> values, Map<AbilityName, InvalidityCode> errors) {
+		return new StaticAbilityScoresArguments(description, values, errors);
 	}
 	/**
 	 * Checks that 
@@ -37,15 +40,26 @@ public class AbilityScoresStaticTest implements AbilityScoresTestInterface{
 	 * Checks that 
 	 * {@link AbilityScores#checkAbilityScoresValidity(java.util.Map)} returns
 	 * a map of {@link InvalidityCode} objects consistent with the input.
-	 * @param testCase
-	 * @param values
-	 * @param error
 	 */
-	@ParameterizedTest(name = "checkAbilityScoresValidity on {0}")
-	@MethodSource({AbilityScoresTestInterface.VALID_ABILITY_SCORES, 
-		AbilityScoresTestInterface.INVALID_ABILITY_SCORES})
-	void checkAbilityScoresValidity_notNullInput(String testCase, 
-			Map<AbilityName, Integer> values, Map<AbilityName, InvalidityCode> error) {
-		assertEquals(error, AbilityScores.checkAbilityScoresValidity(values));
+	@TestFactory
+	Stream<DynamicTest> checkAbilityScoresValidity_notNullInput() {
+		return test("checkAbilityScoresValidity(Map)", args 
+				-> assertEquals(args.errors, AbilityScores.checkAbilityScoresValidity(args.values)));
+	}
+}
+
+class StaticAbilityScoresArguments extends AbilityScoresArguments implements TestArguments<AbilityScores>{
+	StaticAbilityScoresArguments(String description, Map<AbilityName, Integer> values, 
+			Map<AbilityName, InvalidityCode> errors){
+		super(description, values, errors);
+	}
+	/**
+	 * Checks that {@link AbilityScores#create(Map)} returns a properly built
+	 * {@link AbilityScores} object by running all the tests from 
+	 * {@link AbilityScoresTestInterface} on it.
+	 */
+	@Override
+	public AbilityScores convert() {
+		return AbilityScores.create(values);
 	}
 }

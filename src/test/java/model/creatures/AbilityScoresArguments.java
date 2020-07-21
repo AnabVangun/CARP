@@ -8,7 +8,7 @@ import tools.TestArguments;
 
 public abstract class AbilityScoresArguments implements TestArguments<AbilityScores>{
 	final Map<AbilityName, Integer> values;
-	private final String description;
+	final String description;
 	final Map<AbilityName, InvalidityCode> errors;
 	AbilityScoresArguments(String description, Map<AbilityName, Integer> values, 
 			Map<AbilityName, InvalidityCode> errors){
