@@ -24,10 +24,11 @@ import tools.TestFrameWork;
  * interface respects the contracts set by the method descriptions.
  * @author TLM
  */
-public interface AbilityScoreTestInterface<T extends AbilityScoreArgument> 
+public interface AbilityScoreTestInterface<T extends AbilityScoreArguments> 
 extends TestFrameWork<AbilityScore, T>{
 	/**
-	 * Generates an {@link AbilityScore} object to run the tests.
+	 * Generates the arguments for an {@link AbilityScore} object to run the 
+	 * tests.
 	 * @param value		to store in the ability
 	 * @param isDefined	true if the new ability must be defined.
 	 * @return	an {@link AbilityScore} object storing the input value.
